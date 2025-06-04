@@ -1,0 +1,20 @@
+name: winddatas
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - matplotlib
+  - plotly
+  - openpyxl
+  - geopy
+  - cdsapi
+  - netCDF4
+  - xarray
+  - pip
+  - seaborn
+  - pip:
+      - meteostat
+      - python-docx

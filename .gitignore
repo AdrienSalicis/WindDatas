@@ -1,0 +1,15 @@
+# Fichiers � ignorer par Git 
+# Dossiers et fichiers temporaires
+__pycache__/
+*.pyc
+*.ipynb_checkpoints
+.env
+.vscode/
+*.log
+data/
+*.zip
+*.csv
+*.docx
+*.html
+*.nc4
+*.gz

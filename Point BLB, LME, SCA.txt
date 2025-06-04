@@ -1,0 +1,58 @@
+regarder l'étude de LME sur Longchamps (openmeteo et meteo France)
+
+meteostat : à quelle hauteur sont prises les données des stations météo
+Openmeteo : bien relire les détails des données (signification de vent moyen, vent rafales, durée des vents moyen 1h, 10min ?)
+Données par heure ? Par 10 min ?
+Quel profil de vent est utilisé pour ramener le vent à 0.5m
+Au global quel vent maximal est à considérer ?
+Données Stations : Avoir le plus de données sur les stations, site, altitude, qualité
+Output : Wind quality, fiabilité de la valeur. Par point, par site. 
+Etre au clair sur les vents moyennés (durée, hauteur). 
+Mean Wind speed
+Gust Wind speed
+Quelle est le temps moyenné ? 
+Height above ground ? 
+Clarifier les sources des stations
+Se mettre au clair sur le repère de direction. 
+
+
+MeteoFrance : time slot, vent instantané, plan gratuit ? Bonus
+
+Rose des vents : largeur du faisceau, 3 paramètres --> direction, fréquence, intensité
+En faire plusieurs graphes. 
+Script pour création de rose des vents (LME)
+
+Analyse rapide : dates, nombre de données, type de données,
+
+Après l'obtention de données --> Weibull. Fichier LME
+Statistique pour obtenir coefficients Weibull. 
+RLA --> Gumbel Method. 
+Gumbel --> Extrapoler les datas (10ans vers 50ans)
+Weibull : MLE Weibull, Swiss Wind.
+Traitement statistique : fichier BLB avec fichier données de crues, modèle Vortex ? (logiciel vendu permettant de ressortir les données de vents extrêmes)
+Fichier BLB avec les datas Vortex. cf SharePoint. 
+Ne pas se limiter à une donnée, sans savoir sa période de retour
+
+
+NOAA comparer les données avec meteostat. 
+Données MERRA2 à étudier/comparer avec POWER
+Copernicus ERA5 données à venir chercher. 
+MERRA2, ERA, quelles sont les sources de ce modèle de réanalyse. 
+
+
+Faire une fiche technique par site. Description des caractéristiques du site, les sources, les données. 
+
+Faire une présentation sur un site. 
+Photos du site, résultat sur chaque sources, comparatif. 
+Dresser un bilan sur ce qui va varier, les paramètres, les dimensions, nombre de paties, les facteurs et lois mathématiques. 
+Faire un état des lieux de l'existant. 
+
+
+Global Wind Atlas
+
+
+Taux de mesures, combien de mesures sur une durée ? 
+Max des mesures. 
+Valeurs vides et partielles, comment gérer cela
+Site avec modèle météo demander les RP. 
+RP toutes directions confondus. 

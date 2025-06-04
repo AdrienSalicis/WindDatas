@@ -1,0 +1,13 @@
+pandas==2.2.2
+requests==2.32.3
+python-docx==1.1.2
+meteostat==1.6.8
+matplotlib==3.9.2
+openpyxl==3.1.5
+numpy>=1.26.0
+geopy>=2.3
+plotly
+cdsapi==0.6.1
+xarray
+netCDF4
+setuptools

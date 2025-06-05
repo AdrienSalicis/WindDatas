@@ -106,4 +106,4 @@ Voir le guide de contribution : [CONTRIBUTING.md](CONTRIBUTING.md)
 
 Projet initial développé par Adrien Salicis  
 Organisation : Ciel & Terre International  
-Contact : adrien.salicis@cieletterre.net
+Contact : adrien.salicis@cieletterre.net, adrien.salicis@icloud.com

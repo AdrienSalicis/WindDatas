@@ -98,6 +98,10 @@ Pour chaque site, un dossier `data/NOM_SITE/` est créé avec :
 
 Ce projet est sous licence MIT. Il est librement réutilisable, modifiable et redistribuable avec mention de l’auteur initial. Cela permet à d’autres développeurs ou chercheurs de le reprendre et l’enrichir à l’avenir.
 
+## Contribuer
+
+Voir le guide de contribution : [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## Auteurs
 
 Projet initial développé par Adrien Salicis  

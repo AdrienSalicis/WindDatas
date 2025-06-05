@@ -1,0 +1,11 @@
+pandas
+numpy
+requests
+matplotlib
+scipy
+plotly
+python-docx
+geopy
+meteostat
+cdsapi
+tk

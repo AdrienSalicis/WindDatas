@@ -1,6 +1,9 @@
 # WindDatas – Analyse des données de vent observées et modélisées
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Anaconda-blue)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
 
 WindDatas est un projet Python modulaire permettant d’analyser et de comparer des données de vent issues de stations météo (observées) et de modèles climatiques ou API météo (modélisées). Le but est d'évaluer la fiabilité des modèles en s'appuyant sur des données historiques réelles.
 

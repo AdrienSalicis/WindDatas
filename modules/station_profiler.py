@@ -28,9 +28,9 @@ def estimate_roughness(terrain_context):
     return table.get(terrain_context.lower(), "")
 
 def generate_station_csv(site_name, site_info, station1, station2, noaa1=None, noaa2=None):
-    """
-    Crée un fichier CSV listant les métadonnées des stations Meteostat et NOAA utilisées pour un site donné.
-    """
+    site_folder = os.path.join("data", site_info["reference"] + "_" + site_name)
+    os.makedirs(site_folder, exist_ok=True)
+
     station_rows = []
     for i, station in enumerate([station1, station2], 1):
         lat = station.get("latitude")
@@ -56,7 +56,7 @@ def generate_station_csv(site_name, site_info, station1, station2, noaa1=None, n
             "data_coverage_percent": None
         }
 
-        csv_path = f"data/{site_name}/meteostat{i}_{site_name}.csv"
+        csv_path = os.path.join(site_folder, f"meteostat{i}_{site_name}.csv")
         if os.path.exists(csv_path):
             df = pd.read_csv(csv_path)
             total_days = pd.date_range(site_info["start"], site_info["end"]).shape[0]
@@ -91,7 +91,7 @@ def generate_station_csv(site_name, site_info, station1, station2, noaa1=None, n
             "data_coverage_percent": None
         }
 
-        csv_path = f"data/{site_name}/noaa_station{i}_{site_name}.csv"
+        csv_path = os.path.join(site_folder, f"noaa_station{i}_{site_name}.csv")
         if os.path.exists(csv_path):
             df = pd.read_csv(csv_path)
             total_days = pd.date_range(site_info["start"], site_info["end"]).shape[0]
@@ -100,15 +100,13 @@ def generate_station_csv(site_name, site_info, station1, station2, noaa1=None, n
 
         station_rows.append(row)
 
-    output_csv = f"data/{site_name}/stations_{site_name}.csv"
+    output_csv = os.path.join(site_folder, f"stations_{site_name}.csv")
     pd.DataFrame(station_rows).to_csv(output_csv, index=False)
     print(f"[✅] Fichier CSV des stations généré : {output_csv}")
     return station_rows
 
 def generate_station_docx(site_name, station_data_list, output_path):
-    """
-    Crée une fiche descriptive .docx pour les stations météo utilisées.
-    """
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     doc = Document()
     doc.add_heading(f"Fiche Stations – {site_name}", level=1)
 
@@ -125,7 +123,6 @@ def generate_station_docx(site_name, station_data_list, output_path):
         doc.add_paragraph(f"Contexte terrain : {data['terrain_context']}")
         doc.add_paragraph(f"Rugosité estimée : {data['roughness_estimate']}")
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     doc.save(output_path)
     print(f"[✅] Fichier DOCX des stations généré : {output_path}")
     return output_path

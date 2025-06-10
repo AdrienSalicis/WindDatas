@@ -2,7 +2,7 @@
 
 🔗 **Lien API** : [https://dev.meteostat.net/](https://dev.meteostat.net/)
 
-### 🔍 Données récupérées
+### Données récupérées
 
 | Variable         | Description                     | Unité | Temp. agrégation  | Disponibilité |
 |------------------|----------------------------------|--------|--------------------|----------------|
@@ -10,13 +10,13 @@
 | windspeed_gust   | Rafale max journalière          | m/s    | Max journalière     | Variable       |
 | wind_direction   | Direction moyenne du vent       | °      | Moyenne journalière | Bonne          |
 
-### 🎯 Caractéristiques techniques
+### Caractéristiques techniques
 
 - **Hauteur d’observation** : 10 m (standard météo, peut varier selon la station)
 - **Sources** : données issues de stations physiques, maintenues par des services nationaux
 - **Qualité** : excellente pour les régions couvertes (Europe, Amérique du Nord), variable ailleurs
 
-### ⚙️ Méthode d’acquisition
+### Méthode d’acquisition
 
 ```python
 from meteostat import Stations, Daily

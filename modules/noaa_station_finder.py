@@ -40,7 +40,7 @@ def test_isd_station_availability(usaf, wban, year):
     """
     Vérifie si le fichier NOAA ISD pour un identifiant et une année existe réellement.
     """
-    url = f"https://www.ncei.noaa.gov/data/global-hourly/access/{year}/{usaf}-{wban}-{year}.csv.gz"
+    url = f"https://www.ncei.noaa.gov/data/global-hourly/access/{year}/{usaf}{wban}.csv"
     try:
         response = requests.head(url, timeout=5)
         return response.status_code == 200

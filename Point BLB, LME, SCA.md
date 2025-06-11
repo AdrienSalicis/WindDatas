@@ -2,18 +2,18 @@
 
 ## 1. Données et Sources Météo
 
-### 📌 LME – Étude Longchamps
+### LME – Étude Longchamps
 - Analyser les données issues de LME sur le site de Longchamps.
 - Comparaison entre OpenMeteo et Météo France.
 
-### 📌 Meteostat
+### Meteostat
 - Vérifier la **hauteur d’anémomètre** des stations utilisées.
 - Clarifier :
   - Vent moyen, vent de rafales
   - Durée de lissage (1h, 10 min ?)
   - Type de profil utilisé pour ramener le vent à 0.5 m
 
-### 📌 OpenMeteo
+### OpenMeteo
 - Relire en détail les définitions des variables.
 - Fréquence de mesure : horaire ? 10 min ?
 - Déterminer **le vent maximal à considérer**.
@@ -22,7 +22,7 @@
   - Hauteur des mesures
   - Repère de direction utilisé
 
-### 📌 Données Stations
+### Données Stations
 - Collecter un **maximum d’informations** :
   - Nom, site, altitude, qualité, exposition
   - Fiabilité des valeurs (wind quality, flags)
@@ -32,7 +32,7 @@
 
 ## 2. Visualisations
 
-### 🌬️ Roses des vents
+### Roses des vents
 - Largeur du faisceau, direction, fréquence, intensité.
 - Générer plusieurs graphiques si nécessaire.
 - Créer un **script automatique** pour les roses (cf. LME).
@@ -41,13 +41,13 @@
 
 ## 3. Analyse Statistique
 
-### 📊 Général
+### Général
 - Analyser rapidement :
   - Dates disponibles
   - Nombre de données
   - Type de données
 
-### 📈 Lois statistiques
+### Lois statistiques
 - **Weibull** (cf. fichier LME) :
   - Estimation des paramètres : méthode du Maximum de Vraisemblance (MLE), comparaison Swiss Wind
 - **Gumbel** :
@@ -55,7 +55,7 @@
   - Extrapolation 10 → 50 ans
 - Ne pas utiliser une seule donnée brute sans contexte de période de retour.
 
-### 📂 Références
+### Références
 - Fichier BLB avec données de crues
 - Outil Vortex (logiciel de données de vents extrêmes)
 - BLB + Vortex disponibles sur SharePoint
@@ -73,7 +73,7 @@
 
 ## 5. Fiches & Présentations
 
-### 🧾 Fiche technique par site
+### Fiche technique par site
 - Inclure :
   - Description du site
   - Sources météo utilisées
@@ -81,7 +81,7 @@
   - Visualisation/graphique
   - Résultats statistiques
 
-### 📽️ Présentation d’un site type
+### Présentation d’un site type
 - Ajouter :
   - Photos du site
   - Résultats par source météo
@@ -103,7 +103,7 @@
 
 ## 7. Références supplémentaires
 
-- 📚 **Global Wind Atlas** pour enrichir l’analyse (potentiel éolien global).
+- **Global Wind Atlas** pour enrichir l’analyse (potentiel éolien global).
 
 ---
 

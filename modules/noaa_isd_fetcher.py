@@ -11,7 +11,7 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
     for year in tqdm(years, desc=f"Fetching NOAA {usaf}-{wban}"):
         file_url = f"{base_url}/{year}/{usaf}{wban}.csv"
         if verbose:
-            print(f"[📥] Téléchargement {file_url}")
+            print(f"Téléchargement {file_url}")
 
         try:
             df = pd.read_csv(file_url)
@@ -20,7 +20,6 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
                 print(f"[❌] Erreur pour {usaf}-{wban} {year} : {e}")
             continue
 
-        # Vérifier que les colonnes essentielles sont là
         if 'DATE' not in df.columns or 'WND' not in df.columns:
             if verbose:
                 print(f"[⚠️] Colonnes 'DATE' ou 'WND' manquantes pour {usaf}-{wban} en {year}")
@@ -30,32 +29,40 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
         df = df.dropna(subset=['DATE'])
         df['date'] = df['DATE'].dt.date
 
-        # Décomposition du champ WND (direction, vitesse, code qualité, rafale, etc.)
         parsed = df['WND'].str.split(',', expand=True)
         df['wind_dir'] = pd.to_numeric(parsed[0], errors='coerce')
         df['wind_speed'] = pd.to_numeric(parsed[3], errors='coerce') / 10  # knots → m/s
         df['wind_speed'] = df['wind_speed'].mask(df['wind_speed'] > 100)
 
         # Rafales
+        gust_used = "GUST"
         if 'GUST' in df.columns:
             df['gust'] = pd.to_numeric(df['GUST'], errors='coerce') / 10
             df['gust'] = df['gust'].mask(df['gust'] > 150)
-        else:
-            df['gust'] = pd.NA
             if verbose:
-                print(f"[⚠️] Colonne GUST absente pour {year}")
+                print(f"[✔️] Colonne GUST détectée pour {year}")
+        else:
+            df['gust'] = df.groupby('date')['wind_speed'].transform('max')  # fallback
+            gust_used = "WND"
+            if verbose:
+                print(f"[⚠️] Colonne GUST absente pour {year} → fallback sur max(WND)")
 
-        # Direction du vent (si DRCT absent, on peut utiliser wind_dir de WND)
+        # Direction du vent
         if 'DRCT' in df.columns:
             df['wind_direction'] = pd.to_numeric(df['DRCT'], errors='coerce')
-            df['wind_direction'] = df['wind_direction'].mask((df['wind_direction'] > 360) | (df['wind_direction'] < 0))
+            if verbose:
+                print(f"[✔️] Colonne DRCT détectée pour {year}")
         else:
             df['wind_direction'] = df['wind_dir']
             if verbose:
-                print(f"[⚠️] Colonne DRCT absente, utilisation de wind_dir issue de WND")
+                print(f"[⚠️] Colonne DRCT absente → fallback sur wind_dir (WND)")
+
+        # Nettoyage directions
+        df['wind_direction'] = df['wind_direction'].mask(
+            (df['wind_direction'] > 360) | (df['wind_direction'] < 0) | (df['wind_direction'] == 999)
+        )
 
         raw_concat.append(df.copy())
-
         all_data.append(df[['date', 'wind_speed', 'gust', 'wind_direction']])
 
     if not all_data:
@@ -76,16 +83,12 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
         "gust": "windspeed_gust"
     }, inplace=True)
 
-    # Export final
-    os.makedirs(output_dir, exist_ok=True)
-    csv_name = f"noaa_isd_{site_name}_{usaf}{wban}.csv"
-    output_path = os.path.join(output_dir, csv_name)
-    agg_df.to_csv(output_path, index=False)
-
+    # Export final (on NE SAUVEGARDE PAS le noaa_isd_<site>_<usafwban>.csv ici)
+    final_csv = os.path.join(output_dir, f"raw_noaa_station_{1 if 'station1' in site_name else 2}_{site_name}.csv")
+    agg_df.to_csv(final_csv, index=False)
     if verbose:
-        print(f"\n✅ Données NOAA ISD agrégées sauvegardées pour {site_name} → {output_path}")
+        print(f"\n✅ NOAA ISD journalier (source={gust_used}) sauvegardé → {final_csv}")
 
-    # Ajout de l’attribut _raw pour traçabilité si demandé
     if return_raw:
         agg_df._raw = pd.concat(raw_concat, ignore_index=True)
 

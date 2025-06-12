@@ -390,3 +390,90 @@ data = response.json()['properties']['parameter']
 ```
 
 ---
+
+## Fiche Technique – Métadonnées des Stations Météo
+
+### Pourquoi les métadonnées sont essentielles
+Les valeurs de vent mesurées ou modélisées dépendent fortement :
+- de **la hauteur de mesure**
+- de **l’environnement de la station** (terrain, obstacles, exposition)
+- de **la qualité instrumentale**
+==> Sans ces métadonnées, toute comparaison entre sources est biaisée.
+
+---
+
+### Métadonnées typiques à collecter (si disponibles)
+
+| Champ                    | Description                                                                |
+|--------------------------|----------------------------------------------------------------------------|
+| `station_id`             | Identifiant unique de la station (WMO, NOAA ISD, Meteostat…)               |
+| `name`                   | Nom de la station                                                          |
+| `latitude / longitude`   | Coordonnées géographiques                                                  |
+| `elevation`              | Altitude de la station au-dessus du niveau de la mer                       |
+| `anemometer_height`      | Hauteur de l’anémomètre au-dessus du sol (souvent 10 m par convention)     |
+| `station_type`           | Type de station (aéroport, base militaire, automatique, etc.)              |
+| `data_availability`      | Période de fonctionnement / couverture temporelle                          |
+| `variables_available`    | Vent moyen, rafales, direction, température, etc.                          |
+| `distance_to_site`       | Distance entre la station et le site d’étude                               |
+| `roughness_context`      | Contexte du terrain : urbain, rural, montagne, littoral, forêt, etc.       |
+| `exposure_score`         | Évaluation qualitative ou semi-quantitative de l’exposition au vent        |
+
+---
+
+### Problèmes fréquemment rencontrés
+
+| Problème                               | Explication                                                                 |
+|----------------------------------------|-----------------------------------------------------------------------------|
+| Hauteur d’anémomètre inconnue          | Hypothèse par défaut : 10 m (norme WMO), mais peut varier (6–15 m)          |
+| Station abritée                        | Influence des arbres, bâtiments, ou micro-relief → sous-estimation du vent  |
+| Environnement non documenté            | Pas d’indication sur rugosité, exposition, type de terrain                  |
+| Variables absentes / incomplètes       | `GUST` ou `DRCT` parfois manquants, surtout dans les fichiers anciens       |
+| Position imprécise                     | Latitude/longitude tronquées à 2 décimales → incertitudes sur la distance   |
+| Type de station inconnu                | Peut influencer la calibration et l’entretien des capteurs                  |
+
+---
+
+### Rugosité et contexte terrain – comment l’évaluer ?
+
+#### 1. Observation visuelle (Google Earth, Street View)
+- Permet de repérer : forêts, zones urbaines, obstacles, orientation dominante
+- Peut être codée en classes de rugosité (`z0`) selon la norme **EN 1991-1-4** (Eurocode)
+
+| Type de terrain          | Rugosité `z0` approx.  | Exemples                             |
+|--------------------------|------------------------|--------------------------------------|
+| Mer / lac                | 0.0002 – 0.003         | océan, grandes surfaces d’eau        |
+| Terrain ouvert plat      | 0.01 – 0.03            | désert, champs, plaine dégagée       |
+| Zone semi-ouverte        | 0.05 – 0.1             | prairies, hameaux, villages isolés   |
+| Suburbain / urbain bas   | 0.2 – 0.5              | lotissements, petites villes         |
+| Centre urbain dense      | 1.0 – 2.0              | grandes villes, gratte-ciel          |
+| Forêt / montagne         | > 0.5                  | forêt dense, collines, massifs       |
+
+#### 2. Données satellites ou open data
+- CORINE Land Cover, Copernicus, ou SRTM peuvent être utilisés pour estimer l’usage du sol.
+- Calcul automatique possible à terme via API ou raster GIS.
+
+#### 3. Approche qualitative (dans WindDatas)
+- Pour chaque station, on peut coder une **note d’exposition** de 1 à 5 :
+  - 5 = station très exposée (plateau, littoral)
+  - 1 = station très abritée (vallée encaissée, forêt, centre-ville)
+
+---
+
+### À intégrer dans WindDatas
+
+Pour chaque station (Meteostat, NOAA, etc.), il est recommandé de stocker :
+- La **hauteur de mesure (si connue)**, ou `10 m` par défaut
+- La **distance au site**
+- Le **type de terrain / rugosité estimée**
+- Les **variables disponibles** (pour savoir si comparaison possible)
+- Une **note d’exposition (1–5)** et un champ texte libre pour commentaires
+
+---
+
+### Objectif final
+
+> Fournir pour chaque station une **fiche descriptive claire**, avec :
+> - Métadonnées techniques
+> - Données manquantes ou incertaines
+> - Estimations environnementales
+> - Fiabilité de la station pour l’analyse du vent

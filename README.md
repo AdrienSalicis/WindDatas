@@ -42,6 +42,39 @@ WindDatas/
 └── README.md                   ← Ce fichier
 ```
 
+```plaintext
+                        ┌────────────────────┐
+                        │   modele_sites.csv │
+                        └────────┬───────────┘
+                                 │
+                                 ▼
+                         ┌────────────┐
+                         │ script.py  │
+                         └────┬───────┘
+      ┌────────────────────────┼────────────────────────┐
+      ▼                        ▼                        ▼
+┌────────────┐        ┌─────────────────┐      ┌────────────────┐
+│ NOAA ISD   │        │ Meteostat        │      │ Météo-France   │
+│ (stations) │        │ (stations)       │      │ (stations FR)  │
+└────┬───────┘        └────────┬────────┘      └────┬───────────┘
+     │                          │                   │
+     ▼                          ▼                   ▼
+[CSV NOAA]             [CSV meteostat1/2]   [CSV meteo_france]
+                          ▼
+      ┌────────────────────────────┐
+      │   fetch_model_source()     │
+      └────────┬────────┬──────────┘
+               ▼        ▼
+        [ERA5] CSV   [OpenMeteo / NASA] CSV
+
+                  ▼
+       ┌────────────────────────────┐
+       │ export_site_data()         │
+       └────────────┬───────────────┘
+                    ▼
+       Fichiers CSV + Rapport Word + Carte globe
+```
+
 ## Installation
 
 ### Via Conda (recommandé)

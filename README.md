@@ -25,21 +25,21 @@ WindDatas est un projet Python modulaire permettant d’analyser et de comparer 
 
 ## Structure du projet
 
-```
+```plaintext
 WindDatas/
-├── data/                  # Fichiers générés automatiquement (non suivis par Git)
-├── modules/               # Modules Python (fetchers, comparateur, graphiques, etc.)
-├── notebooks/             # Notebooks d’analyse statistique
-├── tests/                 # Tests unitaires
-├── script.py              # Script principal du projet
-├── site_enricher.py       # Enrichissement des métadonnées des sites
-├── modele_sites.csv       # Liste des sites étudiés
-├── environment.yml        # Dépendances pour Conda
-├── requirements.txt       # Dépendances pip
-├── run_winddatas.bat      # Script de lancement Windows
-├── LICENSE                # Licence du projet (MIT)
-└── README.md              # Ce fichier
-```
+├── script.py                    ← Script principal d’orchestration
+├── modele_sites.csv            ← Fichier source des sites à traiter
+├── data/                       ← Données générées automatiquement
+│   └── <ref_site>/             ← Dossier par site (fichiers CSV)
+├── modules/                    ← Modules de traitement par source
+│   ├── meteostat_fetcher.py
+│   ├── noaa_isd_fetcher.py
+│   ├── era5_fetcher.py
+│   ├── openmeteo_fetcher.py
+│   └── source_manager.py
+├── requirements.txt            ← Dépendances Python
+├── run_winddatas.bat           ← Lancement automatique sous Windows
+└── README.md                   ← Ce fichier
 
 ## Installation
 

@@ -77,16 +77,22 @@ def main():
         for i, station in enumerate([noaa_station1, noaa_station2], 1):
             if station:
                 try:
-                    df = fetch_isd_series(
-                        site_name=name,
-                        usaf=station["usaf"],
-                        wban=station["wban"],
-                        years=list(range(int(start[:4]), int(end[:4]) + 1)),
-                        output_dir=site_folder,
-                        verbose=True,
-                        return_raw=True,
-                        station_rank=i
-                    )
+                    filename = f"noaa_station{i}_{name}.csv"
+                    filepath = os.path.join(site_folder, filename)
+                    if os.path.exists(filepath):
+                        print(f"[⏩] Fichier déjà existant – lecture directe : {filepath}")
+                        df = pd.read_csv(filepath)
+                    else:
+                        df = fetch_isd_series(
+                            site_name=name,
+                            usaf=station["usaf"],
+                            wban=station["wban"],
+                            years=list(range(int(start[:4]), int(end[:4]) + 1)),
+                            output_dir=site_folder,
+                            verbose=True,
+                            return_raw=True,
+                            station_rank=i
+                        )
                     noaa_data[f"noaa_station{i}"] = df
                 except Exception as e:
                     print(f"[⚠️] Erreur NOAA station {i} : {e}")

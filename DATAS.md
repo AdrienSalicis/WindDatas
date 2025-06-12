@@ -2,19 +2,50 @@
 
 🔗 **Lien API** : [https://dev.meteostat.net/](https://dev.meteostat.net/)
 
-### Données récupérées
+## Fiche Source : Meteostat
 
-| Variable         | Description                     | Unité | Temp. agrégation  | Disponibilité |
-|------------------|----------------------------------|--------|--------------------|----------------|
-| windspeed_mean   | Vitesse moyenne du vent         | m/s    | Moyenne journalière | Excellente (Europe/US) |
-| windspeed_gust   | Rafale max journalière          | m/s    | Max journalière     | Variable       |
-| wind_direction   | Direction moyenne du vent       | °      | Moyenne journalière | Bonne          |
+### Type de données
+- **Observées**, issues de stations météorologiques officielles (SYNOP, METAR, stations nationales).
+- Données collectées depuis des sources comme NOAA ISD, DWD (Allemagne), Environment Canada, etc.
+- Agrégation et harmonisation assurées par l'équipe Meteostat.
 
-### Caractéristiques techniques
+### Hauteur de mesure
+- **En principe : 10 mètres au-dessus du sol**, conformément aux recommandations de l’OMM.
+- **⚠️ Toutefois**, **aucune garantie** de hauteur homogène : chaque station peut avoir des instruments installés à des hauteurs variables.
+- Meteostat **ne fournit pas** la hauteur exacte des instruments via son API, mais suit la norme si les données sources le précisent.
 
-- **Hauteur d’observation** : 10 m (standard météo, peut varier selon la station)
-- **Sources** : données issues de stations physiques, maintenues par des services nationaux
-- **Qualité** : excellente pour les régions couvertes (Europe, Amérique du Nord), variable ailleurs
+### Période de moyennage
+- **Vent moyen (`windspeed_mean`)** : moyenne glissante sur **10 minutes**, selon la **norme OMM/WMO No.8**.
+  - Cette période est spécifiée pour les stations SYNOP et METAR, qui sont majoritaires dans Meteostat.
+
+### Rafales (`gust`)
+- Représentent le **maximum de vent instantané (3 secondes)** mesuré durant la période précédente (souvent 10 min).
+- Lorsque la source le permet, Meteostat inclut la **rafale max sur 3 s**, conformément à la norme WMO.
+
+### Direction du vent
+- **Direction d’origine du vent**, exprimée en degrés azimutaux :
+  - `0°` = du nord, `90°` = de l’est, `180°` = du sud, `270°` = de l’ouest
+- Mesurée sur la même période que la vitesse moyenne (10 min).
+
+### Variables typiques (lorsqu’elles sont disponibles)
+
+| Variable         | Description                           | Unité  |
+|------------------|---------------------------------------|------- |
+| `windspeed_mean` | Vent moyen sur 10 minutes             | m/s    |
+| `wind_direction` | Direction moyenne sur 10 minutes      | degrés |
+| `gust`           | Rafale max sur 3 secondes             | m/s    |
+
+### 🔎 Résumé technique
+
+| Élément              | Détail                                        |
+|----------------------|-----------------------------------------------|
+| Source               | Meteostat (données observées)                 |
+| Hauteur anémomètre   | ~10 m (norme WMO si connue, sinon inconnue)   |
+| Vent moyen           | Moyenne glissante sur 10 minutes              |
+| Rafales              | Max sur 3 secondes (si fourni par la source)  |
+| Direction            | Azimut d’origine du vent                      |
+| Fréquence temporelle | Généralement horaire ou demi-horaire          |
+| Norme suivie         | OMM / WMO No.8                                |
 
 ### Méthode d’acquisition
 
@@ -42,21 +73,69 @@ df = df.rename(columns={
 
 🔗 **Lien données** : [https://www.ncei.noaa.gov/data/global-hourly/](https://www.ncei.noaa.gov/data/global-hourly/)
 
-### Données récupérées
+## Fiche Source : NOAA ISD (Integrated Surface Dataset)
 
-| Variable         | Description                   | Unité | Temp. agrégation | Commentaire              |
-|------------------|-------------------------------|--------|------------------|---------------------------|
-| windspeed_mean   | Vitesse maximale journalière  | m/s    | max journalière  | issue des données horaires |
-| windspeed_gust   | Rafale max journalière        | m/s    | max journalière  | si colonne GUST présente   |
-| wind_direction   | Direction dominante du vent   | °      | mode journalière | issue de DRCT ou WND       |
+### Type de données
+- **Observées**, enregistrées par des stations météorologiques officielles dans le monde entier.
+- Source principale : **ISD (Integrated Surface Dataset)** maintenu par la NOAA (NCEI).
+- Données issues de messages METAR, SYNOP, AUTO… centralisés depuis plus de **35 000 stations**.
 
-### Caractéristiques techniques
+### Hauteur de mesure
+- La **hauteur d’installation des instruments** varie d’une station à l’autre.
+- Par convention, la hauteur standard recommandée par la NOAA pour l’anémomètre est **10 mètres**.
+- ⚠️ Cette hauteur **n’est pas toujours précisée** dans les fichiers horaires `.csv` accessibles depuis l’interface web.
+- Pour connaître la hauteur exacte → se référer au fichier `isd-history.csv` (champ `ELEV` ≠ hauteur d’anémomètre mais utile pour l’environnement de la station).
 
-- **Hauteur d’observation** : souvent 10 m, mais variable selon les stations
-- **Fréquence native** : données horaires (voire toutes les 20 min pour certaines)
-- **Couverture historique** : jusqu’à 1929 pour certaines stations
-- **Format brut** : décodage requis de WND, DRCT, GUST
-- **Type** : données brutes issues de capteurs physiques certifiés (stations officielles NOAA)
+### Fréquence et période de moyennage
+- **Fréquence d’enregistrement** : en général **horaire**, parfois plus fréquent.
+- **Vitesse du vent (`WND`)** :
+  - Représente la **moyenne sur 2 minutes** avant l’heure d’observation (**source officielle NOAA**).
+  - Source : [NOAA ISH Format Documentation (PDF)](https://www.ncei.noaa.gov/pub/data/noaa/ish-format-document.pdf), section WND.
+- **Direction du vent (`WND`)** : Direction moyenne du vent sur la même période de 2 minutes.
+
+### Rafales (`GUST`)
+- Si présentes, les **rafales (`GUST`)** représentent la **rafale maximale sur 5 secondes** dans l’heure précédant l’observation.
+- ⚠️ Toutes les stations ne rapportent pas cette variable (elle est souvent absente dans les anciens fichiers ou certaines régions).
+
+### Direction du vent
+- Exprimée en **degrés azimutaux**, standard WMO :
+  - `0°` = vent du Nord, `90°` = vent d’Est, etc.
+- Valeurs invalides = `999`.
+
+### Format des fichiers bruts NOAA ISD (`.csv`)
+
+| Champ     | Description                              | Exemple                |
+|-----------|------------------------------------------|------------------------|
+| `DATE`    | Date/heure UTC                           | `2023-01-01T12:00:00`  |
+| `WND`     | Direction et vitesse moyenne sur 2 min   | `270,15,9999,1`        |
+| `GUST`    | Rafale max sur 5 s                       | `25.1`                 |
+| `DRCT`    | Direction du vent (alternative)          | `270`                  |
+
+### Variables typiques extraites pour WindDatas
+
+| Variable         | Description                              | Unité |
+|------------------|------------------------------------------|-------|
+| `windspeed_mean` | Moyenne sur 2 min (`WND`)                | m/s   |
+| `wind_direction` | Direction moyenne (`WND` ou `DRCT`)      | degré |
+| `gust`           | Rafale max sur 5 s (`GUST`)              | m/s   |
+
+### 🔎 Résumé technique
+
+| Élément              | Détail                                                       |
+|----------------------|--------------------------------------------------------------|
+| Source               | NOAA ISD (fichiers horaires, station par station)            |
+| Hauteur anémomètre   | En principe 10 m, non systématiquement précisée              |
+| Vent moyen           | Moyenne sur 2 minutes avant l'observation                    |
+| Rafales              | Max sur 5 secondes dans l’heure précédente (si disponible)   |
+| Direction            | Azimut d’origine du vent                                     |
+| Fréquence temporelle | En général horaire                                           |
+| Norme suivie         | WMO, format ISH / ISD standard NOAA                          |
+
+### 🔗 Références officielles
+
+- NOAA ISD Dataset: [https://www.ncei.noaa.gov/data/global-hourly/](https://www.ncei.noaa.gov/data/global-hourly/)
+- Format technique ISD (PDF): [https://www.ncei.noaa.gov/pub/data/noaa/ish-format-document.pdf](https://www.ncei.noaa.gov/pub/data/noaa/ish-format-document.pdf)
+
 
 ### Méthode d’acquisition
 
@@ -89,21 +168,78 @@ df_daily = df.groupby('date').agg({
 
 🔗 **Lien API** : [https://open-meteo.com/](https://open-meteo.com/)
 
-### Données récupérées
+## Fiche Source : Open-Meteo
 
-| Variable         | Description                   | Unité | Temp. agrégation  |
-|------------------|-------------------------------|--------|-------------------|
-| windspeed_mean   | Vitesse moyenne du vent       | m/s    | journalière       |
-| windspeed_gust   | Rafale maximale               | m/s    | journalière       |
-| wind_direction   | Direction moyenne             | °      | moyenne horaires  |
+### Type de données
+- **Données modélisées**, issues de modèles numériques météo open source.
+- Fournies par l’API **Open-Meteo**, qui intègre et réinterprète plusieurs jeux de données publics.
+- ❗ Ce ne sont **pas** des données observées, mais **des prévisions ou des réanalyses interpolées** spatialement sur grille.
 
-### Caractéristiques techniques
+### Modèles utilisés
+- Selon la variable, l’heure et la région, Open-Meteo agrège les données de :
+  - **ICON** (modèle allemand DWD, haute résolution)
+  - **ECMWF** (HRES)
+  - **GFS** (modèle global NOAA)
+- Pour l’historique (`historical weather`), Open-Meteo utilise des réanalyses ou des prévisions archivées (non précisées avec exactitude dans la doc publique).
 
-- **Hauteur modélisée** : 10 m
-- **Sources** : modèles météorologiques globaux
-- **Type** : données de réanalyse ou prévision reconstituée
-- **Qualité** : dépend du relief, du maillage local, et du modèle sous-jacent (ICON, GFS...)
-- **Avantages** : API gratuite, rapide, sans clé obligatoire
+### Hauteur de mesure
+- Toutes les données de vent sont **standardisées à 10 mètres au-dessus du sol**, conformément aux conventions WMO.
+- ⚠️ Il s’agit de **valeurs modélisées à 10 m**, **pas de mesures instrumentées**.
+
+### Fréquence temporelle et période de moyennage
+- Fréquence des données : **horaire**.
+- `windspeed_10m` : **vent moyen horaire** (correspond à la valeur de vent moyen sur 1 heure issue du modèle météo).
+- `windgusts_10m` : **rafale modélisée maximale sur l’heure**.
+
+### Rafales (`windgusts_10m`)
+- Représente le **vent rafale modélisé maximal** sur l’heure.
+- Peut sous-estimer les pics réels car dépend de la paramétrisation du modèle et de la résolution horizontale (~10–20 km).
+
+### Direction du vent
+- `winddirection_10m` : donnée en **degrés azimutaux**, direction **d’origine du vent** :
+  - `0°` = Nord, `90°` = Est, etc.
+- Moyenne horaire issue du modèle.
+
+### Variables typiques
+
+| Variable            | Description                                  | Unité |
+|---------------------|----------------------------------------------|-------|
+| `windspeed_10m`     | Vent moyen horaire à 10 m                    | m/s   |
+| `windgusts_10m`     | Rafale max horaire modélisée à 10 m          | m/s   |
+| `winddirection_10m` | Direction moyenne horaire modélisée à 10 m   | degrés|
+
+### Résumé technique
+
+| Élément              | Détail                                                   |
+|----------------------|----------------------------------------------------------|
+| Source               | Open-Meteo API                                           |
+| Type                 | Modélisation numérique / réanalyse                       |
+| Hauteur              | 10 m (standardisée)                                      |
+| Vent moyen           | Moyenne horaire modélisée (`windspeed_10m`)              |
+| Rafales              | Rafale horaire max modélisée (`windgusts_10m`)           |
+| Direction            | Direction azimutale moyenne sur 1h (`winddirection_10m`) |
+| Fréquence temporelle | Horaire                                                  |
+| Norme suivie         | WMO (hauteur), mais modèle → non conforme aux mesures    |
+
+### ⚠️ Pourquoi Open-Meteo peut surestimer les vents moyens ?
+
+Même si Open-Meteo fournit des valeurs de vent "moyennes", elles peuvent parfois **dépasser celles mesurées en station sur 10 minutes**. Plusieurs raisons techniques expliquent cela :
+
+1. **Exposition théorique du modèle** : la maille de modèle (~10 km) représente souvent un terrain dégagé, non abrité par des obstacles locaux (relief, forêts, bâtiments). Cela peut générer des valeurs plus élevées qu'une station réelle exposée différemment.
+
+2. **Topographie idéalisée** : les modèles utilisent une moyenne de l'altitude/rugosité, ce qui peut surévaluer localement l’intensité du vent.
+
+3. **Interpolation temporelle** : les modèles donnent une valeur unique par heure. Il peut s’agir d’un pic ou d’une valeur non parfaitement moyennée, selon l’étape du modèle.
+
+4. **Définition du vent moyen** : ce n’est pas forcément une moyenne glissante vectorielle (comme en station) mais une sortie modélisée directe, parfois plus proche d’un "instantané représentatif".
+
+5. **Absence de microclimat** : contrairement aux stations réelles, le modèle ne tient pas compte des phénomènes locaux à petite échelle (zone urbaine, vallée fermée, etc).
+
+### 🔗 Références officielles
+
+- Open-Meteo Docs: [https://open-meteo.com/en/docs](https://open-meteo.com/en/docs)
+- API Historical Weather: [https://open-meteo.com/en/docs/historical-weather-api](https://open-meteo.com/en/docs/historical-weather-api)
+
 
 ### Méthode d’acquisition
 
@@ -120,7 +256,107 @@ pd.merge(df_daily, df_dir, on="time", how="left")
 
 ---
 
-## 4. NASA POWER – Données modélisées issues de la NASA
+## 4. ERA5 – Données de réanalyse ECMWF
+
+🔗 **Lien Copernicus CDS** : [https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels)
+
+## Fiche Source : ERA5 (Copernicus / ECMWF)
+
+### Type de données
+- **Réanalyses climatiques modélisées**, produites par le **Centre Européen pour les Prévisions Météorologiques (ECMWF)**.
+- Mise à disposition via le programme **Copernicus Climate Data Store (CDS)**.
+- Combinaison d’un modèle numérique de prévision du temps (IFS) et de l’assimilation de millions d’observations (stations, satellites, ballons…).
+
+---
+
+### Hauteur de mesure
+- Les vents sont fournis à **10 mètres au-dessus du sol** :
+  - `10m_u_component_of_wind`
+  - `10m_v_component_of_wind`
+- Ces composantes sont interpolées à partir des niveaux du modèle, sur une surface moyenne.
+
+---
+
+### Fréquence temporelle et moyenne
+- **Données horaires**, soit une résolution temporelle de **1 heure**.
+- Les vitesses sont dérivées de :  
+  `windspeed = sqrt(u² + v²)`
+- Ces valeurs représentent une **moyenne spatiale sur une maille de 31 km** (≈ area average).
+
+---
+
+### Rafales (`10m_wind_gust_since_previous_post_processing`)
+- Variable dédiée aux rafales, parfois absente selon les jeux de données.
+- Représente le **maximum estimé depuis la dernière étape de post-traitement** (~1 heure).
+- ❗ Ne correspond **pas toujours** à la définition WMO (rafale sur 3 secondes).
+
+---
+
+### Direction du vent
+- Calculée à partir des composantes U/V :  
+  `direction = arctan2(-u, -v)`
+- Direction **d’origine du vent**, en degrés azimutaux (0° = nord, 90° = est...).
+
+---
+
+### Variables typiques
+
+| Variable                             | Description                         | Unité |
+|--------------------------------------|-------------------------------------|-------|
+| `10m_u_component_of_wind`            | Composante est-ouest du vent       | m/s   |
+| `10m_v_component_of_wind`            | Composante nord-sud du vent        | m/s   |
+| `10m_wind_gust_since_previous_post_processing` | Rafale maximale sur l'heure | m/s   |
+
+---
+
+### Résumé technique
+
+| Élément               | Détail                                              |
+|----------------------|-----------------------------------------------------|
+| Source               | ERA5 via Copernicus CDS                             |
+| Type                 | Données modélisées – réanalyse                      |
+| Résolution temporelle| 1 heure                                             |
+| Résolution spatiale  | ~31 km (ERA5-Land : ~9 km)                          |
+| Hauteur              | 10 m au-dessus du sol                               |
+| Vent moyen           | Moyenne horaire sur grille modélisée                |
+| Rafales              | Max depuis dernier post-processing (~1 h)           |
+| Direction            | Azimut (origine du vent), calculée à partir de U/V |
+
+---
+
+### ⚠️ Limitations et précisions (d'après ECMWF)
+
+> **« Yes, the underestimation is related to the limited spatial resolution of ERA5, and the fact that ERA5 represents an area average. »**  
+> — *Hans Hersbach (ECMWF)*
+
+- **ERA5 a tendance à lisser les vents extrêmes**, notamment les rafales locales.
+- Les **stations donnent une info ponctuelle**, tandis qu’ERA5 fournit une **valeur moyenne sur un pixel de 31 km × 31 km**.
+- Il est **possible** (et conseillé) d’utiliser une **correction empirique** basée sur des comparaisons entre ERA5 et stations.
+- **ERA6 est en préparation**, avec meilleure résolution (mais prévue pour ~fin 2026).
+
+---
+
+### Références officielles
+
+- Copernicus Climate Data Store: [https://cds.climate.copernicus.eu/](https://cds.climate.copernicus.eu/)
+- ERA5 documentation: [https://confluence.ecmwf.int/display/CKB/ERA5](https://confluence.ecmwf.int/display/CKB/ERA5)
+- Réponse officielle ECMWF (Hans Hersbach, juin 2025)
+
+
+### Méthode d’acquisition (via CDSAPI)
+
+```python
+request = {
+  "variable": ["10m_u_component_of_wind", "10m_v_component_of_wind"],
+  "date": f"{start}/{end}",
+  "location": {"latitude": lat, "longitude": lon},
+  "data_format": "csv"
+}
+c.retrieve("reanalysis-era5-single-levels-timeseries", request).download(...)
+```
+---
+
+## 5. NASA POWER – Données modélisées issues de la NASA
 
 🔗 **Lien API** : [https://power.larc.nasa.gov/](https://power.larc.nasa.gov/)
 
@@ -154,36 +390,3 @@ data = response.json()['properties']['parameter']
 ```
 
 ---
-
-## 5. ERA5 – Données de réanalyse ECMWF
-
-🔗 **Lien Copernicus CDS** : [https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels)
-
-### Données récupérées
-
-| Variable               | Description                       | Unité | Temp. agrégation |
-|------------------------|------------------------------------|--------|------------------|
-| 10m_u_component_of_wind | Composante zonale du vent         | m/s    | horaire          |
-| 10m_v_component_of_wind | Composante méridienne du vent     | m/s    | horaire          |
-| windspeed_mean         | Vitesse moyenne reconstruite       | m/s    | max journalière  |
-| wind_direction         | Direction moyenne reconstruite     | °      | moyenne journalière |
-
-### Caractéristiques techniques
-
-- **Hauteur modélisée** : 10 m
-- **Sources** : réanalyse basée sur mesures satellites + assimilations numériques ECMWF
-- **Résolution** : 0.25° (~30 km)
-- **Période** : depuis 1940
-- **Qualité** : très homogène et fiable, mais peut sous-estimer les extrêmes
-
-### Méthode d’acquisition (via CDSAPI)
-
-```python
-request = {
-  "variable": ["10m_u_component_of_wind", "10m_v_component_of_wind"],
-  "date": f"{start}/{end}",
-  "location": {"latitude": lat, "longitude": lon},
-  "data_format": "csv"
-}
-c.retrieve("reanalysis-era5-single-levels-timeseries", request).download(...)
-```

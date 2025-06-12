@@ -40,6 +40,7 @@ WindDatas/
 ├── requirements.txt            ← Dépendances Python
 ├── run_winddatas.bat           ← Lancement automatique sous Windows
 └── README.md                   ← Ce fichier
+```
 
 ## Installation
 

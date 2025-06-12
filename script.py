@@ -17,12 +17,10 @@ from modules.station_profiler import generate_station_csv, generate_station_docx
 # 🌐 Sources spécifiques
 from modules.noaa_station_finder import load_isd_stations, find_nearest_isd_stations
 from modules.noaa_isd_fetcher import fetch_isd_series
-from modules.meteo_france_station_finder import find_nearest_mf_station
-from modules.meteo_france_fetcher import fetch_meteofrance_data
-
+from modules.meteo_france_station_finder import get_mf_stations_list, find_closest_mf_station
+from modules.meteo_france_fetcher import fetch_meteo_france_data
 
 def export_site_data(site_data, site_folder):
-    """💾 Sauvegarde tous les fichiers CSV des sources disponibles pour un site."""
     os.makedirs(site_folder, exist_ok=True)
     paths = []
 
@@ -34,7 +32,6 @@ def export_site_data(site_data, site_folder):
             print(f"[✅] Fichier généré : {filepath}")
             paths.append(filepath)
 
-            # ⚠️ Si NOAA, on sauvegarde aussi la version brute si disponible
             if "noaa_station" in key:
                 raw_path = os.path.join(site_folder, f"raw_{filename}")
                 if hasattr(df, "_raw") and isinstance(df._raw, pd.DataFrame):
@@ -44,21 +41,15 @@ def export_site_data(site_data, site_folder):
             print(f"[⚠️] Données vides ou absentes pour {key} – fichier non généré.")
     site_data["files"] = paths
 
-
 def main():
     print("[📁] Répertoire de travail actuel :", os.getcwd())
-
-    # 📄 Chargement des sites à traiter
     print("[🌍] Chargement des sites depuis modele_sites.csv...")
     sites = load_sites_from_csv("modele_sites.csv")
-
-    # 📆 Période d’étude définie par l’utilisateur
     start, end = get_date_range_from_user()
     if not start or not end:
         print("[❌] Dates non valides. Fin du script.")
         return
 
-    # 📂 Chargement de la base de stations NOAA ISD
     isd_df = load_isd_stations("data/isd-history.csv")
     all_sites_data = []
 
@@ -74,12 +65,10 @@ def main():
         site_folder = os.path.join("data", site_ref)
         os.makedirs(site_folder, exist_ok=True)
 
-        # 🔎 1. Récupération des stations METEOSTAT
         stations = get_nearest_stations_info(lat, lon)
         station1 = stations["station1"]
         station2 = stations["station2"]
 
-        # 🌐 2. Recherche des 2 stations NOAA ISD les plus proches
         noaa_candidates = find_nearest_isd_stations(lat, lon, isd_df)
         noaa_station1 = next((s for s in noaa_candidates if s["file_available"]), None)
         noaa_station2 = next((s for s in noaa_candidates[1:] if s["file_available"]), None)
@@ -87,57 +76,66 @@ def main():
         noaa_data = {}
         for i, station in enumerate([noaa_station1, noaa_station2], 1):
             if station:
-                df = fetch_isd_series(
-                    site_name=name,
-                    usaf=station["usaf"],
-                    wban=station["wban"],
-                    years=list(range(int(start[:4]), int(end[:4]) + 1)),
-                    output_dir=site_folder,
-                    verbose=True,
-                    return_raw=True
-                )
-                noaa_data[f"noaa_station{i}"] = df
+                try:
+                    df = fetch_isd_series(
+                        site_name=name,
+                        usaf=station["usaf"],
+                        wban=station["wban"],
+                        years=list(range(int(start[:4]), int(end[:4]) + 1)),
+                        output_dir=site_folder,
+                        verbose=True,
+                        return_raw=True,
+                        station_rank=i
+                    )
+                    noaa_data[f"noaa_station{i}"] = df
+                except Exception as e:
+                    print(f"[⚠️] Erreur NOAA station {i} : {e}")
 
-        # 🇫🇷 3. Récupération MeteoFrance (si site en France)
         meteo_france_data = None
         if country.upper() in ["FR", "FRANCE"]:
-            station_mf = find_nearest_mf_station(lat, lon)
-            meteo_france_data = fetch_meteofrance_data(
-                station_id=station_mf["id"],
+            try:
+                stations_df = get_mf_stations_list()
+                station_mf = find_closest_mf_station(lat, lon, stations_df)
+                mf_id = station_mf["id"]
+                path_mf = fetch_meteo_france_data(mf_id, start, end, name)
+                df_mf = pd.read_csv(path_mf) if path_mf else None
+                meteo_france_data = df_mf
+            except Exception as e:
+                print(f"[⚠️] Erreur récupération MeteoFrance : {e}")
+
+        try:
+            observed = fetch_observed_sources(
+                site_info=site,
                 site_name=name,
-                output_dir=site_folder,
+                site_folder=site_folder,
+                lat=lat,
+                lon=lon,
+                start_date=start,
+                end_date=end,
+                meteostat_id1=station1["id"],
+                meteostat_id2=station2["id"]
+            )
+        except Exception as e:
+            print(f"[⚠️] Erreur récupération sources observées : {e}")
+            observed = {}
+
+        if meteo_france_data is not None:
+            observed["meteofrance"] = {"data": meteo_france_data, "station_id": mf_id}
+
+        try:
+            model = fetch_model_source(
+                site_info=site,
+                site_name=name,
+                site_folder=site_folder,
+                lat=lat,
+                lon=lon,
                 start_date=start,
                 end_date=end
             )
+        except Exception as e:
+            print(f"[⚠️] Erreur récupération source modélisée : {e}")
+            model = {}
 
-        # 📊 4. Données observées – fusion METEOSTAT + MF
-        observed = fetch_observed_sources(
-            site_info=site,
-            site_name=name,
-            site_folder=site_folder,
-            lat=lat,
-            lon=lon,
-            start_date=start,
-            end_date=end,
-            meteostat_id1=station1["id"],
-            meteostat_id2=station2["id"]
-        )
-
-        if meteo_france_data is not None:
-            observed["meteofrance"] = {"data": meteo_france_data, "station_id": station_mf["id"]}
-
-        # 📡 5. Données modélisées – OpenMeteo, NASA Power, ERA5
-        model = fetch_model_source(
-            site_info=site,
-            site_name=name,
-            site_folder=site_folder,
-            lat=lat,
-            lon=lon,
-            start_date=start,
-            end_date=end
-        )
-
-        # 🧩 Fusion finale
         site_data = {
             "name": name,
             "country": country,
@@ -153,56 +151,24 @@ def main():
             "data": {
                 "meteostat1": observed.get("meteostat1", {}).get("data"),
                 "meteostat2": observed.get("meteostat2", {}).get("data"),
-                "meteofrance": observed.get("meteofrance", {}).get("data") if "meteofrance" in observed else None,
+                "meteofrance": observed.get("meteofrance", {}).get("data"),
                 "noaa_station1": noaa_data.get("noaa_station1"),
                 "noaa_station2": noaa_data.get("noaa_station2"),
                 "openmeteo": model.get("openmeteo", {}).get("data"),
                 "nasa_power": model.get("nasa_power", {}).get("data"),
-                "era5": model.get("era5", {}).get("data"),
-                "era5_singlelevels": model.get("era5_singlelevels", {}).get("data")
+                "era5": model.get("era5", {}).get("data")
             }
         }
 
-        # 💾 Sauvegarde CSV + bruts
         export_site_data(site_data, site_folder)
-
-        # 📑 Génération des fiches stations
-        station_data = generate_station_csv(name, site_data, station1, station2, noaa_station1, noaa_station2)
-        generate_station_docx(name, station_data, os.path.join(site_folder, f"stations_{name}.docx"))
-
-        # 📈 Rapport comparatif
-        files_dict = {k: f for k in site_data["files"] for key in site_data["data"] if key in f}
-        if len(files_dict) >= 2:
-            generate_comparison_report(name, site_folder, files_dict)
-        else:
-            print("[⚠️] Pas assez de données pour une comparaison.")
-
-        # 🌪 Radar de directions moyennes
-        radar = plot_wind_direction_distribution(
-            site_name=name,
-            output_path=site_folder,
-            **site_data["data"]
-        )
-        if radar:
-            site_data['files'].append(radar)
-
         all_sites_data.append(site_data)
 
-        #print("[⏳] Pause de 30 secondes avant le prochain site.")
-        #time.sleep(30)
-
-    # 📘 Rapport final par pays
-    print("\n📘 Génération du rapport Word par pays.")
-    create_word_report_by_country(all_sites_data, "data/rapport_meteo.docx")
-
-    # 🌍 Visualisation interactive
-    print("\n🌍 Génération de la visualisation interactive.")
-    output_html = "data/visualisation_globe.html"
-    visualize_sites_on_globe(all_sites_data, output_html)
-    print(f"✅ Visualisation disponible ici : {output_html}")
-
-    print("\n🎉 Script terminé avec succès !")
-
+    create_word_report_by_country(all_sites_data, "data/Rapport_WindDatas.docx")
+    visualize_sites_on_globe(all_sites_data)
+    generate_station_csv(all_sites_data)
+    generate_station_docx(all_sites_data)
+    generate_comparison_report(all_sites_data)
+    plot_wind_direction_distribution(all_sites_data)
 
 if __name__ == "__main__":
     main()

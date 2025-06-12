@@ -1,3 +1,4 @@
+# noaa_isd_fetcher.py
 import os
 import pandas as pd
 import requests
@@ -39,25 +40,16 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
         if 'GUST' in df.columns:
             df['gust'] = pd.to_numeric(df['GUST'], errors='coerce') / 10
             df['gust'] = df['gust'].mask(df['gust'] > 150)
-            if verbose:
-                print(f"[✔️] Colonne GUST détectée pour {year}")
         else:
             df['gust'] = df.groupby('date')['wind_speed'].transform('max')  # fallback
             gust_used = "WND"
-            if verbose:
-                print(f"[⚠️] Colonne GUST absente pour {year} → fallback sur max(WND)")
 
         # Direction du vent
         if 'DRCT' in df.columns:
             df['wind_direction'] = pd.to_numeric(df['DRCT'], errors='coerce')
-            if verbose:
-                print(f"[✔️] Colonne DRCT détectée pour {year}")
         else:
             df['wind_direction'] = df['wind_dir']
-            if verbose:
-                print(f"[⚠️] Colonne DRCT absente → fallback sur wind_dir (WND)")
 
-        # Nettoyage directions
         df['wind_direction'] = df['wind_direction'].mask(
             (df['wind_direction'] > 360) | (df['wind_direction'] < 0) | (df['wind_direction'] == 999)
         )
@@ -71,7 +63,7 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
 
     full_df = pd.concat(all_data, ignore_index=True)
 
-    # Agrégation par jour
+    # Agrégation quotidienne
     agg_df = full_df.groupby("date").agg({
         "wind_speed": "max",
         "gust": "max",
@@ -83,13 +75,16 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
         "gust": "windspeed_gust"
     }, inplace=True)
 
-    # Export final (on NE SAUVEGARDE PAS le noaa_isd_<site>_<usafwban>.csv ici)
-    final_csv = os.path.join(output_dir, f"raw_noaa_station_{1 if 'station1' in site_name else 2}_{site_name}.csv")
+    # 🔄 Nouveau nom cohérent
+    station_id = "1" if "station1" in site_name else "2"
+    final_csv = os.path.join(output_dir, f"noaa_station{station_id}_{site_name}.csv")
     agg_df.to_csv(final_csv, index=False)
+
     if verbose:
         print(f"\n✅ NOAA ISD journalier (source={gust_used}) sauvegardé → {final_csv}")
 
-    if return_raw:
-        agg_df._raw = pd.concat(raw_concat, ignore_index=True)
+    # Suppression des RAW
+    if not return_raw:
+        del raw_concat  # libère mémoire
 
     return agg_df

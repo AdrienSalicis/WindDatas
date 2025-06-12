@@ -1,17 +1,26 @@
-def determine_sources(site_info):
-    country = site_info.get("country", "").upper()
+# source_strategy.py
+# Définit une stratégie conditionnelle d'utilisation des sources météo par localisation ou qualité
 
-    sources = {
-        "observed": [],
-        "modeled": ["openmeteo", "nasa_power", "era5"] # sans "visualcrossing". Fetcher  présent dans modules/ (limitations plan gratuit de l'API)
-    }
+def determine_sources(country):
+    """
+    Détermine dynamiquement les sources à utiliser en fonction du pays.
+    Renvoie une liste de sources météo à activer (observées + modélisées).
+    """
+    country = country.lower()
+    observed = []
+    modeled = []
 
-    if country in ["US", "USA"]:
-        sources["observed"] = ["noaa"]
-    elif country in ["FR", "FRANCE", "DE", "GERMANY", "ES", "SPAIN", "IT", "ITALY", "UK", "UNITED KINGDOM", "NL", "BE", "LU"]:
-        sources["observed"] = ["meteostat"]
+    if country == "france":
+        observed = ["meteofrance", "meteostat"]
+        modeled = ["era5", "openmeteo", "nasa_power"]
+    elif country == "united states" or country == "usa":
+        observed = ["noaa", "meteostat"]
+        modeled = ["era5", "openmeteo", "nasa_power"]
     else:
-        sources["observed"] = ["meteostat"]
+        observed = ["meteostat"]
+        modeled = ["era5", "openmeteo", "nasa_power"]
 
-    return sources
-
+    return {
+        "observed": observed,
+        "modeled": modeled
+    }

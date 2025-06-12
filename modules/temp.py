@@ -1,0 +1,18 @@
+import requests
+
+URL = "https://public-api.meteofrance.fr/public/DPClim/v1/liste-stations/quotidienne"
+API_KEY = "Bearer eyJ4NXQiOiJOelU0WTJJME9XRXhZVGt6WkdJM1kySTFaakZqWVRJeE4yUTNNalEyTkRRM09HRmtZalkzTURkbE9UZ3paakUxTURRNFltSTVPR1kyTURjMVkyWTBNdyIsImtpZCI6Ik56VTRZMkkwT1dFeFlUa3paR0kzWTJJMVpqRmpZVEl4TjJRM01qUTJORFEzT0dGa1lqWTNNRGRsT1RnelpqRTFNRFE0WW1JNU9HWTJNRGMxWTJZME13X1JTMjU2IiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI4Zjk4NjNiZC0xZjZmLTRkNDItYTg3OC01ODk3YzZjODBkNjAiLCJhdXQiOiJBUFBMSUNBVElPTiIsImF1ZCI6IlYxSnFIVHpSUWFHNG0xVnNFQTBmS3lrM2xkY2EiLCJuYmYiOjE3NDk2NTg0MTAsImF6cCI6IlYxSnFIVHpSUWFHNG0xVnNFQTBmS3lrM2xkY2EiLCJzY29wZSI6ImRlZmF1bHQiLCJpc3MiOiJodHRwczpcL1wvcG9ydGFpbC1hcGkubWV0ZW9mcmFuY2UuZnJcL29hdXRoMlwvdG9rZW4iLCJleHAiOjE3NDk2NjIwMTAsImlhdCI6MTc0OTY1ODQxMCwianRpIjoiZmNlMmYxMDgtNmI5Yy00ODQxLWE5ZTAtMDQ5YTIyMGY1Nzc2IiwiY2xpZW50X2lkIjoiVjFKcUhUelJRYUc0bTFWc0VBMGZLeWszbGRjYSJ9.htODl2dRqIyj6p_mm_ztx_bSlOM5lfYyCS3CvXMGUSei2p80gJvTg7WGnPzjZCGTTqIh7zLjA9PWDSP4aeZm0SMYJVn6D53tqbCQRrn3wTfWpmnW7LdFdRBW-7DH4e1OpGEX597T9IGT6TDP3a_QZpBvdqrQFbX2TybrgGQYg_qGZEZaAQFh8N9AJKf59I7Y1lm-G-M7FNDBxB0u03mmydDHrso61JPAEcX5XELkT7MhyYGosCb-tvYuy4Ed9qNkyHRQQV2SyhOv86aUOLVMmQcXJy2gpWyS5vu0ofRt0bIKAIkeUFxQQ3WwDEVJfq5mH06p6WLVsrSc_OxhTOmDjA"  # remplace ici par ton token fraîchement généré
+
+HEADERS = {
+    "accept": "application/json",
+    "Authorization": API_KEY
+}
+
+print("[MF] Test requête brute vers Météo-France...")
+resp = requests.get(
+    url=URL,
+    headers=HEADERS,
+    params={"id-departement": "31"}  # Haute-Garonne (ex : Toulouse)
+)
+print("Status:", resp.status_code)
+print("Contenu:", resp.text[:200])

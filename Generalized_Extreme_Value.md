@@ -20,23 +20,23 @@ F(x) = \exp\left( -\left[ 1 + \xi \cdot \left( \frac{x - \mu}{\sigma} \right) \r
 
 - \( \mu \) : paramètre de localisation
 - \( \sigma > 0 \) : paramètre d’échelle
-- \( \xi \) : paramètre de forme (clé pour différencier les lois)
+- \( ξ \) : paramètre de forme (clé pour différencier les lois)
 
 ---
 
 ## 2. Les trois cas de la loi GEV
 
-| Loi        | Valeur de \( \xi \) | Comportement de la queue   | Cas d’application typique         |
-|------------|---------------------|----------------------------|-----------------------------------|
-| **Gumbel** | \( \xi = 0 \)       | Exponentielle décroissante | Rafales de vent, températures     |
-| **Fréchet**| \( \xi > 0 \)       | Queue lourde               | Crues, séismes, valeurs extrêmes  |
-| **Weibull**| \( \xi < 0 \)       | Queue bornée               | Résistance de matériaux, vitesses max limitées |
+| Loi        | Valeur de \( ξ \) | Comportement de la queue   | Cas d’application typique         |
+|------------|-------------------|----------------------------|-----------------------------------|
+| **Gumbel** | \( ξ = 0 \)       | Exponentielle décroissante | Rafales de vent, températures     |
+| **Fréchet**| \( ξ > 0 \)       | Queue lourde               | Crues, séismes, valeurs extrêmes  |
+| **Weibull**| \( ξ < 0 \)       | Queue bornée               | Résistance de matériaux, vitesses max limitées |
 
 ---
 
 ## 3. Détail des lois individuelles
 
-### Loi de Gumbel (\( \xi = 0 \))
+### Loi de Gumbel (\( ξ = 0 \))
 
 - Distribution classique des maxima
 - Pas de valeur maximale théorique
@@ -52,7 +52,7 @@ F(x) = \exp\left( -\left[ 1 + \xi \cdot \left( \frac{x - \mu}{\sigma} \right) \r
 
 ---
 
-### Loi de Fréchet (\( \xi > 0 \))
+### Loi de Fréchet (\( ξ > 0 \))
 
 - S’applique aux distributions à **queue lourde**
 - Valeurs extrêmes très grandes possibles
@@ -60,7 +60,7 @@ F(x) = \exp\left( -\left[ 1 + \xi \cdot \left( \frac{x - \mu}{\sigma} \right) \r
 
 ---
 
-### Loi de Weibull extrême (\( \xi < 0 \))
+### Loi de Weibull extrême (\( ξ < 0 \))
 
 - Queue **bornée** : valeur maximale théorique
 - Bon pour décrire une limite physique supérieure
@@ -102,7 +102,7 @@ La période de retour est liée à la **probabilité de non-dépassement** :
 F(x) = 1 - \frac{1}{T}
 \]
 
-On calcule donc \( x \) tel que :
+On calcule donc \( x \) tel que : 
 
 \[
 x = F^{-1}\left(1 - \frac{1}{T}\right)

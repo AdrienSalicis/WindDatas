@@ -1,139 +1,176 @@
 # WindDatas – Analyse des données de vent observées et modélisées
 
-![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11-blue)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Anaconda-blue)
-![Status](https://img.shields.io/badge/status-active-brightgreen)
+\
+\
+\
 
-WindDatas est un projet Python modulaire permettant d’analyser et de comparer des données de vent issues de stations météo (observées) et de modèles climatiques ou API météo (modélisées). Le but est d'évaluer la fiabilité des modèles en s'appuyant sur des données historiques réelles.
+
+WindDatas est un projet Python modulaire et évolutif qui permet d’analyser, comparer et valider des données de vent issues de **stations météo (observées)** et de **modèles climatiques ou API météo (modélisées)**. Son objectif est de fournir une évaluation rigoureuse et transparente des modèles sur la base de données historiques fiables.
+
+---
 
 ## Objectifs
 
-- Récupérer automatiquement des données météo (vents) pour plusieurs sites à travers le monde.
-- Comparer les données modélisées (OpenMeteo, ERA5, NASA POWER) aux données observées (Meteostat, NOAA).
-- Générer des graphiques comparatifs, des statistiques et des rapports automatisés.
-- Permettre une étude approfondie via des notebooks scientifiques.
+- Récupération automatisée des données météo (vents) pour de nombreux sites dans le monde.
+- Comparaison rigoureuse des données observées (NOAA, Meteostat) et modélisées (ERA5, NASA POWER, OpenMeteo, MERRA-2, Visual Crossing).
+- Analyse statistique complète avec génération de rapports.
+- Visualisation interactive des sites et des stations sur un globe.
+- Étude approfondie grâce à des notebooks scientifiques détaillés et pédagogiques.
 
-## Fonctionnalités
+---
 
-- Sélection automatique des deux stations Meteostat les plus proches de chaque site.
-- Récupération des données pour une période donnée.
-- Génération de fichiers CSV pour chaque source et chaque site.
-- Analyse statistique comparative (écarts, corrélations, jours extrêmes, direction moyenne).
-- Génération de rapports `.docx` par pays.
-- Visualisation interactive des sites et stations sur un globe HTML.
+## Fonctionnalités principales
+
+- Sélection automatique des deux stations les plus proches (NOAA, Meteostat) avec distances calculées.
+- Récupération des métadonnées des stations (altitude, hauteur anémomètre, contexte terrain).
+- Extraction des extrêmes journaliers (rafales max) depuis les données horaires NOAA ISD.
+- Interface Tkinter pour définir dynamiquement la période d’étude.
+- Téléchargement asynchrone et robuste des données ERA5 avec journalisation des mois déjà traités.
+- Modules dédiés pour chaque source, activables ou désactivables dynamiquement.
+- Génération de rapports Word structurés par pays et sites.
+- Exports CSV clairs et organisés.
+- Visualisation interactive sur globe HTML des sites et stations associées.
+- Notebooks d’analyse avancés : Weibull, Gumbel, roses des vents, radar directionnel, statistiques détaillées.
+- Support multi-stations par site (fichiers meteostat1\_x.csv, noaa\_station2\_x.csv, etc.).
+- Architecture modulaire avec tests unitaires dans le dossier `tests/`.
+
+---
 
 ## Structure du projet
 
-```plaintext
+```
 WindDatas/
-├── script.py                    ← Script principal d’orchestration
-├── modele_sites.csv            ← Fichier source des sites à traiter
-├── data/                       ← Données générées automatiquement
-│   └── <ref_site>/             ← Dossier par site (fichiers CSV)
-├── modules/                    ← Modules de traitement par source
+├── script.py
+├── modele_sites.csv
+├── data/
+│   └── <ref_site>/
+├── modules/
 │   ├── meteostat_fetcher.py
 │   ├── noaa_isd_fetcher.py
 │   ├── era5_fetcher.py
 │   ├── openmeteo_fetcher.py
-│   └── source_manager.py
-├── requirements.txt            ← Dépendances Python
-├── run_winddatas.bat           ← Lancement automatique sous Windows
-└── README.md                   ← Ce fichier
+│   ├── visualcrossing_fetcher.py
+│   ├── merra2_fetcher.py
+│   ├── meteo_france_fetcher.py
+│   ├── source_manager.py
+│   ├── comparator.py
+│   ├── stats_calculator.py
+│   ├── merger.py
+│   └── tkinter_ui.py
+├── notebooks/
+│   └── analyse_vent_TEMPLATE_FINAL_CLEAN_TECHNIQUE.ipynb
+├── tests/
+├── requirements.txt
+├── environment.yml
+├── run_winddatas.bat
+└── README.md
 ```
 
-```plaintext
-                    ┌────────────────────┐
-                    │   modele_sites.csv │
-                    └────────┬───────────┘
-                             │
-                             ▼
-                       ┌────────────┐
-                       │ script.py  │
-                       └────┬───────┘
-      ┌─────────────────────┼────────────────────────┐
-      ▼                     ▼                        ▼
-┌────────────┐        ┌─────────────────┐      ┌────────────────┐
-│ NOAA ISD   │        │ Meteostat       │      │ Météo-France   │
-│ (stations) │        │ (stations)      │      │ (stations FR)  │
-└────┬───────┘        └────────┬────────┘      └────┬───────────┘
-     │                         │                    │
-     ▼                         ▼                    ▼
-[CSV NOAA]             [CSV meteostat1/2]   [CSV meteo_france]
-                          ▼
-      ┌────────────────────────────┐
-      │   fetch_model_source()     │
-      └────────┬────────┬──────────┘
-               ▼        ▼
-        [ERA5] CSV   [OpenMeteo / NASA] CSV
-                  │
-                  ▼
-       ┌────────────────────────────┐
-       │ export_site_data()         │
-       └────────────┬───────────────┘
-                    ▼
-       Fichiers CSV + Rapport Word + Carte globe
+---
+
+## Schéma global du workflow
+
 ```
+    modele_sites.csv
+            │
+            ▼
+        script.py
+            │
+ ┌─────────┬─────────┬─────────┐
+ ▼         ▼         ▼         ▼
+NOAA   Meteostat   ERA5   OpenMeteo/NASA
+  │        │         │         │
+  ▼        ▼         ▼         ▼
+ CSV    CSV1/2     CSV      CSV
+            │
+            ▼
+   Analyse statistique
+            │
+            ▼
+Rapports Word, Graphiques, Globe HTML
+```
+
+---
 
 ## Installation
 
-### Via Conda (recommandé)
+### Avec Conda (recommandé)
 
-```bash
+```
 conda env create -f environment.yml
 conda activate winddatas
 ```
 
-### Via pip (optionnel)
+### Avec pip (optionnel)
 
-```bash
+```
 pip install -r requirements.txt
 ```
 
+---
+
 ## Utilisation
 
-Lancer le projet via :
+Lancer le projet :
 
-```bash
+```
 python script.py
 ```
 
-Ou avec le fichier batch Windows :
+Ou via Windows :
 
-```bash
+```
 run_winddatas.bat
 ```
 
-Une interface vous demandera de saisir les dates de début et de fin, puis les données seront automatiquement récupérées, analysées et exportées.
+- Interface Tkinter pour sélectionner les dates.
+- Données récupérées et analysées automatiquement.
+- Export CSV et Word organisés.
 
-## Tests
-
-Pour exécuter tous les tests unitaires :
-
-```bash
-python -m unittest discover -s tests
-```
+---
 
 ## Données générées
 
-Pour chaque site, un dossier `data/NOM_SITE/` est créé avec :
+Pour chaque site dans `data/<NOM_SITE>/` :
 
-- Données CSV de chaque source
-- Graphiques de comparaison (distribution, radar, etc.)
-- Rapport `.docx` regroupé par pays
-- Visualisation globe HTML
+- Données CSV (toutes sources)
+- Graphiques (histogrammes, Weibull, radar, roses des vents)
+- Rapport Word par pays
+- Globe HTML interactif
 
-## Sources de données utilisées
+---
 
-- Meteostat
+## Sources de données intégrées
+
+**Observées :**
+
+- NOAA ISD (2 stations les plus proches, distances calculées)
+- Meteostat (2 stations les plus proches, métadonnées enrichies)
+
+**Modélisées :**
+
+- ERA5 (rafales en commentaire configurable)
 - Open-Meteo
-- ERA5 - Copernicus CDS
 - NASA POWER
-- NOAA ISD
+- MERRA-2 (désactivable)
+- Visual Crossing (désactivable)
+- Meteo-France (intégré dans source\_manager)
+
+---
+
+## Notebooks inclus
+
+- Analyse statistique détaillée des vents
+- Ajustements Weibull/Gumbel
+- Roses des vents
+- Comparaisons directionnelles sur radar
+- Détection des valeurs aberrantes
+
+---
 
 ## Licence
 
-Ce projet est sous licence MIT. Il est librement réutilisable, modifiable et redistribuable avec mention de l’auteur initial. Cela permet à d’autres développeurs ou chercheurs de le reprendre et l’enrichir à l’avenir.
+MIT – Libre d'utilisation et de modification avec attribution.
 
 ---
 
@@ -143,9 +180,11 @@ Ce projet est sous licence MIT. Il est librement réutilisable, modifiable et re
 - [Workflow Git](WORKFLOW.md)
 - [Guide de contribution](CONTRIBUTING.md)
 
+---
 
 ## Auteurs
 
-Projet initial développé par Adrien Salicis  
-Organisation : Ciel & Terre International  
-Contact : adrien.salicis@cieletterre.net, adrien.salicis@icloud.com
+Projet initial : **Adrien Salicis**\
+Organisation : **Ciel & Terre International**\
+Contact : [adrien.salicis@cieletterre.net](mailto\:adrien.salicis@cieletterre.net), [adrien.salicis@icloud.com](mailto\:adrien.salicis@icloud.com)
+

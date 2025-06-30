@@ -177,7 +177,7 @@ def main():
         }
 
         export_site_data(site_data, site_folder)
-        generate_site_report(site, output_folder="data")
+        generate_site_report(site_data, output_folder="data")
 
         try:
             print(f"[⚡] Exécution notebook automatique pour {site_ref}")

@@ -10,7 +10,7 @@ from modules.source_manager import fetch_observed_sources, fetch_model_source
 from modules.comparator import generate_comparison_report
 from modules.graphics import plot_wind_direction_distribution
 from modules.word_generator import create_word_report_by_country
-from modules.globe_visualizer import visualize_sites_on_globe
+from modules.globe_visualizer import visualize_sites_plotly
 from modules.tkinter_ui import get_date_range_from_user
 from modules.station_profiler import generate_station_csv, generate_station_docx
 

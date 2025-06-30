@@ -8,3 +8,5 @@ python-docx>=0.8
 geopy>=2.2
 meteostat>=1.6
 cdsapi>=0.5
+pydeck>=0.8
+papermill>=2.4

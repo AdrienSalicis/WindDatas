@@ -1,56 +1,113 @@
-
 import plotly.graph_objects as go
 
-def visualize_sites_on_globe(sites_data, output_html_path):
+def visualize_sites_plotly(sites_data, output_html_path="globe_plotly.html"):
+    """
+    Génère une visualisation globe interactive Plotly des sites et de leurs stations associées.
+    """
+
+    # Points accumulés
     lats_sites, lons_sites, texts_sites = [], [], []
-    lats_ms1, lons_ms1, texts_ms1 = [], [], []
-    lats_ms2, lons_ms2, texts_ms2 = [], [], []
-    lats_om, lons_om, texts_om = [], [], []
+    lats_meteostat, lons_meteostat, texts_meteostat = [], [], []
+    lats_noaa, lons_noaa, texts_noaa = [], [], []
 
     for site in sites_data:
+        # Point du site
         lats_sites.append(site["latitude"])
         lons_sites.append(site["longitude"])
-        texts_sites.append(f"Site: {site['name']} ({site['country']})")
+        texts_sites.append(
+            f"<b>Site</b>: {site['name']} ({site['country']})<br>"
+            f"Lat: {site['latitude']:.4f}, Lon: {site['longitude']:.4f}"
+        )
 
-        ms1 = site["meteostat1"]
-        lats_ms1.append(ms1["latitude"])
-        lons_ms1.append(ms1["longitude"])
-        texts_ms1.append(f"Meteostat 1: {ms1['name']} ({ms1['id']})\nDistance: {ms1['distance_km']:.2f} km")
+        # Stations Meteostat
+        for key in ["meteostat1", "meteostat2"]:
+            if key in site and site[key]:
+                st = site[key]
+                lats_meteostat.append(st["latitude"])
+                lons_meteostat.append(st["longitude"])
+                texts_meteostat.append(
+                    f"<b>Meteostat</b><br>ID: {st['id']}<br>Name: {st['name']}<br>"
+                    f"Distance: {st['distance_km']} km<br>"
+                    f"Elevation: {st['elevation']} m<br>"
+                    f"Anemometer: {st['anemometer_height']} m"
+                )
 
-        ms2 = site["meteostat2"]
-        lats_ms2.append(ms2["latitude"])
-        lons_ms2.append(ms2["longitude"])
-        texts_ms2.append(f"Meteostat 2: {ms2['name']} ({ms2['id']})\nDistance: {ms2['distance_km']:.2f} km")
+        # Stations NOAA
+        for key in ["noaa1", "noaa2"]:
+            if key in site and site[key]:
+                st = site[key]
+                lats_noaa.append(st["latitude"])
+                lons_noaa.append(st["longitude"])
+                texts_noaa.append(
+                    f"<b>NOAA</b><br>ID: {st['id']}<br>Name: {st['name']}<br>"
+                    f"Distance: {st['distance_km']} km<br>"
+                    f"Elevation: {st['elevation']} m<br>"
+                    f"Anemometer: {st['anemometer_height']} m"
+                )
 
-        lats_om.append(site["latitude"])
-        lons_om.append(site["longitude"])
-        texts_om.append("OpenMeteo – données API")
-
+    # === Figure Plotly
     fig = go.Figure()
 
+    # Site principal
     fig.add_trace(go.Scattergeo(
-        lat=lats_sites, lon=lons_sites, text=texts_sites, mode='markers',
-        marker=dict(size=5, color='red'), name='Sites étudiés'))
+        lat=lats_sites,
+        lon=lons_sites,
+        mode='markers+text',
+        text=texts_sites,
+        marker=dict(size=10, color='red', symbol='star'),
+        name='Sites étudiés'
+    ))
 
+    # Meteostat
     fig.add_trace(go.Scattergeo(
-        lat=lats_ms1, lon=lons_ms1, text=texts_ms1, mode='markers',
-        marker=dict(size=4, color='blue'), name='Meteostat 1'))
+        lat=lats_meteostat,
+        lon=lons_meteostat,
+        mode='markers',
+        text=texts_meteostat,
+        marker=dict(size=7, color='blue', symbol='circle'),
+        name='Stations Meteostat'
+    ))
 
+    # NOAA
     fig.add_trace(go.Scattergeo(
-        lat=lats_ms2, lon=lons_ms2, text=texts_ms2, mode='markers',
-        marker=dict(size=4, color='green'), name='Meteostat 2'))
+        lat=lats_noaa,
+        lon=lons_noaa,
+        mode='markers',
+        text=texts_noaa,
+        marker=dict(size=7, color='green', symbol='square'),
+        name='Stations NOAA'
+    ))
 
-    fig.add_trace(go.Scattergeo(
-        lat=lats_om, lon=lons_om, text=texts_om, mode='markers',
-        marker=dict(size=3, color='purple'), name='OpenMeteo'))
+    # Mise en page
+    fig.update_geos(
+        projection_type="orthographic",
+        showland=True,
+        landcolor="rgb(230, 230, 230)",
+        showocean=True,
+        oceancolor="rgb(180, 220, 255)",
+        showcountries=True,
+        countrycolor="rgb(100, 100, 100)",
+        showlakes=True,
+        lakecolor="rgb(200, 200, 255)"
+    )
 
     fig.update_layout(
-        title='🌐 Visualisation interactive des sites et stations météo',
-        geo=dict(projection_type='orthographic', showland=True, landcolor="rgb(250, 250, 250)",
-                 showocean=True, oceancolor="rgb(200, 230, 255)", showcountries=True,
-                 lataxis_showgrid=True, lonaxis_showgrid=True),
-        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
+        title=dict(
+            text="Carte interactive – Sites et Stations Météo",
+            x=0.5,
+            font=dict(size=20)
+        ),
+        legend=dict(
+            yanchor="bottom",
+            y=0.01,
+            xanchor="right",
+            x=0.99,
+            bgcolor="rgba(255,255,255,0.85)",
+            bordercolor="gray",
+            borderwidth=1
+        ),
+        margin=dict(l=0, r=0, t=40, b=0)
     )
 
     fig.write_html(output_html_path)
-    return output_html_path
+    print(f"[✅] Visualisation Plotly générée : {output_html_path}")

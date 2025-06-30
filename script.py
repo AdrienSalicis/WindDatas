@@ -20,6 +20,14 @@ from modules.noaa_isd_fetcher import fetch_isd_series
 from modules.meteo_france_station_finder import get_mf_stations_list, find_closest_mf_station
 from modules.meteo_france_fetcher import fetch_meteo_france_data
 
+from modules.globe_visualizer import visualize_sites_plotly
+from modules.globe_visualizer_pydeck import visualize_sites_pydeck
+
+from modules.report_generator import generate_site_report
+
+import papermill as pm
+
+  
 def export_site_data(site_data, site_folder):
     os.makedirs(site_folder, exist_ok=True)
     paths = []
@@ -136,7 +144,9 @@ def main():
                 lat=lat,
                 lon=lon,
                 start_date=start,
-                end_date=end
+                end_date=end,
+                openmeteo_model=None,               # ➜ paramètre modèle (ECMWF IFS etc.)
+                gust_correction_factor=None         # ➜ paramètre facteur correctif (commenté si inutilisé)
             )
         except Exception as e:
             print(f"[⚠️] Erreur récupération source modélisée : {e}")
@@ -167,10 +177,23 @@ def main():
         }
 
         export_site_data(site_data, site_folder)
+        generate_site_report(site, output_folder="data")
+
+        try:
+            print(f"[⚡] Exécution notebook automatique pour {site_ref}")
+            pm.execute_notebook(
+                'notebooks/notebook_auto.ipynb',
+                f'data/{site_ref}/notebook_executed.ipynb',
+                parameters={"site_ref": site_ref}
+            )
+        except Exception as e:
+            print(f"[⚠️] Erreur Papermill pour {site_ref} : {e}")
+
         all_sites_data.append(site_data)
 
     create_word_report_by_country(all_sites_data, "data/Rapport_WindDatas.docx")
-    visualize_sites_on_globe(all_sites_data)
+    visualize_sites_plotly(all_sites_data, "visualisation_plotly.html")
+    visualize_sites_pydeck(all_sites_data, "visualisation_pydeck.html")
     generate_station_csv(all_sites_data)
     generate_station_docx(all_sites_data)
     generate_comparison_report(all_sites_data)

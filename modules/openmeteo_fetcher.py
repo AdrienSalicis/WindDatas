@@ -3,34 +3,26 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-def fetch_openmeteo_data(lat, lon, start_date, end_date):
-    # Daily data (gust + mean)
-    url_daily = (
-        f"https://archive-api.open-meteo.com/v1/archive?"
-        f"latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}"
-        f"&daily=windspeed_10m_max,windspeed_10m_mean&timezone=auto"
-    )
+def fetch_openmeteo_data(lat, lon, start_date, end_date, model=None, gust_correction_factor=None):
+    """
+    Télécharge les données horaires brutes d'OpenMeteo pour calculer soi-même :
+    - la moyenne journalière du vent moyen
+    - la moyenne journalière de la direction
+    - le max journalier des rafales horaires (gusts)
+    """
 
-    response_daily = requests.get(url_daily)
-    if response_daily.status_code != 200:
-        raise Exception(f"Erreur API OpenMeteo (daily) : {response_daily.status_code} - {response_daily.text}")
-    
-    data_daily = response_daily.json().get("daily", {})
-    df_daily = pd.DataFrame(data_daily)
-    df_daily["time"] = pd.to_datetime(df_daily["time"])
+    base_url = "https://archive-api.open-meteo.com/v1/archive"
+    model_param = f"&models={model}" if model else ""
 
-    df_daily = df_daily.rename(columns={
-        "windspeed_10m_max": "windspeed_gust",
-        "windspeed_10m_mean": "windspeed_mean"
-    })
-
-    # Hourly data (wind direction)
+    # 📌 1️⃣ Données horaires brutes : windspeed + direction + gusts
     url_hourly = (
-        f"https://archive-api.open-meteo.com/v1/archive?"
-        f"latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}"
-        f"&hourly=winddirection_10m&timezone=auto"
+        f"{base_url}?latitude={lat}&longitude={lon}"
+        f"&start_date={start_date}&end_date={end_date}"
+        f"&hourly=windspeed_10m,winddirection_10m,windgusts_10m"
+        f"&timezone=auto{model_param}"
     )
 
+    print(f"[🌐] Appel API OpenMeteo (hourly) : {url_hourly}")
     response_hourly = requests.get(url_hourly)
     if response_hourly.status_code != 200:
         raise Exception(f"Erreur API OpenMeteo (hourly) : {response_hourly.status_code} - {response_hourly.text}")
@@ -38,25 +30,41 @@ def fetch_openmeteo_data(lat, lon, start_date, end_date):
     data_hourly = response_hourly.json().get("hourly", {})
     df_hourly = pd.DataFrame(data_hourly)
     df_hourly["time"] = pd.to_datetime(df_hourly["time"])
-
-    # Moyenne journalière des directions horaires
     df_hourly["date"] = df_hourly["time"].dt.date
-    df_dir = df_hourly.groupby("date")["winddirection_10m"].mean().reset_index()
-    df_dir = df_dir.rename(columns={"date": "time", "winddirection_10m": "wind_direction"})
-    df_dir["time"] = pd.to_datetime(df_dir["time"])
 
-    # Fusion finale
-    df_final = pd.merge(df_daily, df_dir, on="time", how="left")
+    # 📌 2️⃣ Calcul des agrégats journaliers
+    df_daily_agg = df_hourly.groupby("date").agg({
+        "windspeed_10m": "mean",
+        "winddirection_10m": "mean",
+        "windgusts_10m": "max"
+    }).reset_index()
 
-    return df_final
+    df_daily_agg = df_daily_agg.rename(columns={
+        "date": "time",
+        "windspeed_10m": "windspeed_mean",
+        "winddirection_10m": "wind_direction",
+        "windgusts_10m": "windspeed_gust"
+    })
 
-def save_openmeteo_data(site_name, site_folder, lat, lon, start_date, end_date):
-    df = fetch_openmeteo_data(lat, lon, start_date, end_date)
+    df_daily_agg["time"] = pd.to_datetime(df_daily_agg["time"])
 
-    filename = f"openmeteo_{site_name}_lat{lat:.2f}_lon{lon:.2f}.csv"
+    # 📌 3️⃣ Application optionnelle d'un facteur correctif sur les rafales
+    # if gust_correction_factor is not None:
+    #     print(f"[🧪] Application facteur correctif rafales : x{gust_correction_factor}")
+    #     df_daily_agg["windspeed_gust"] = df_daily_agg["windspeed_gust"] * gust_correction_factor
+
+    print(f"[✅] Données OpenMeteo téléchargées et agrégées proprement.")
+    return df_daily_agg
+
+
+def save_openmeteo_data(site_name, site_folder, lat, lon, start_date, end_date, model=None, gust_correction_factor=None):
+    df = fetch_openmeteo_data(lat, lon, start_date, end_date, model=model, gust_correction_factor=gust_correction_factor)
+
+    filename = f"openmeteo_{site_name}.csv"
     filepath = os.path.join(site_folder, filename)
     df.to_csv(filepath, index=False)
 
+    print(f"[✅] Fichier OpenMeteo sauvegardé : {filepath}")
     return {
         'filename': filename,
         'filepath': filepath,

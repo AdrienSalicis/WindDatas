@@ -26,7 +26,7 @@ def fetch_observed_sources(site_info, site_name, site_folder, lat, lon,
     try:
         if meteostat_id2:
             df_meteo = fetch_meteostat_data(site_name, site_folder, lat, lon, start_date, end_date, station_ids=[meteostat_id2])
-            df2 = df_meteo.get("meteostat1")  # Le fichier sera nommé meteostat1 si appelé seul
+            df2 = df_meteo.get("meteostat1")
             if df2 is not None and not df2.empty:
                 observed["meteostat2"] = {"data": df2, "station_id": meteostat_id2}
             else:
@@ -37,12 +37,17 @@ def fetch_observed_sources(site_info, site_name, site_folder, lat, lon,
     return observed
 
 
-def fetch_model_source(site_info, site_name, site_folder, lat, lon, start_date, end_date):
+def fetch_model_source(site_info, site_name, site_folder, lat, lon, start_date, end_date, 
+                       openmeteo_model=None, gust_correction_factor=None):
     model = {}
 
-    # OpenMeteo
+    # OpenMeteo amélioré avec model et facteur
     try:
-        df_openmeteo = save_openmeteo_data(site_name, site_folder, lat, lon, start_date, end_date)
+        df_openmeteo = save_openmeteo_data(
+            site_name, site_folder, lat, lon, start_date, end_date,
+            model=openmeteo_model,
+            gust_correction_factor=gust_correction_factor
+        )
         if df_openmeteo and os.path.exists(df_openmeteo["filepath"]):
             df = pd.read_csv(df_openmeteo["filepath"])
             model["openmeteo"] = {"data": df}

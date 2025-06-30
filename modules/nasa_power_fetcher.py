@@ -69,7 +69,8 @@ def fetch_nasa_power_data(site_name, site_folder, lat, lon, start_date, end_date
     if df_empty is not None:
         df = pd.concat([df_empty, df], ignore_index=True)
 
-    output_path = os.path.join(site_folder, f"power_{site_name}.csv")
+    # ✅ Correction : nom cohérent
+    output_path = os.path.join(site_folder, f"nasa_power_{site_name}.csv")
     df.to_csv(output_path, index=False)
 
     print(f"[✅] Données NASA POWER enregistrées : {output_path}")

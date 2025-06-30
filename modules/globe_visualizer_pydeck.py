@@ -21,7 +21,10 @@ def visualize_sites_pydeck(sites_data, output_html_path="globe_pydeck.html"):
         for key in ["meteostat1", "meteostat2"]:
             if key in site and site[key]:
                 st = site[key]
-                label = f"Meteostat\nID: {st['id']}\nName: {st['name']}\nDist: {st['distance_km']} km\nElev: {st['elevation']} m\nAnemo: {st['anemometer_height']} m"
+                label = (
+                    f"Meteostat\nID: {st.get('id','N/A')}\nName: {st.get('name','N/A')}\n"
+                    f"Dist: {st.get('distance_km','N/A')} km\nElev: {st.get('elevation','N/A')} m\nAnemo: {st.get('anemometer_height','N/A')} m"
+                )
                 rows.append({
                     "lon": st["longitude"],
                     "lat": st["latitude"],
@@ -35,7 +38,10 @@ def visualize_sites_pydeck(sites_data, output_html_path="globe_pydeck.html"):
         for key in ["noaa1", "noaa2"]:
             if key in site and site[key]:
                 st = site[key]
-                label = f"NOAA\nID: {st['id']}\nName: {st['name']}\nDist: {st['distance_km']} km\nElev: {st['elevation']} m\nAnemo: {st['anemometer_height']} m"
+                label = (
+                    f"NOAA\nID: {st.get('id','N/A')}\nName: {st.get('name','N/A')}\n"
+                    f"Dist: {st.get('distance_km','N/A')} km\nElev: {st.get('elevation','N/A')} m\nAnemo: {st.get('anemometer_height','N/A')} m"
+                )
                 rows.append({
                     "lon": st["longitude"],
                     "lat": st["latitude"],

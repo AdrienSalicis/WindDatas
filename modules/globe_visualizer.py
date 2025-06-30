@@ -28,8 +28,8 @@ def visualize_sites_plotly(sites_data, output_html_path="globe_plotly.html"):
                 texts_meteostat.append(
                     f"<b>Meteostat</b><br>ID: {st['id']}<br>Name: {st['name']}<br>"
                     f"Distance: {st['distance_km']} km<br>"
-                    f"Elevation: {st['elevation']} m<br>"
-                    f"Anemometer: {st['anemometer_height']} m"
+                    f"Elevation: {st.get('elevation', 'N/A')} m<br>"
+                    f"Anemometer: {st.get('anemometer_height', 'N/A')} m"
                 )
 
         # Stations NOAA
@@ -39,11 +39,12 @@ def visualize_sites_plotly(sites_data, output_html_path="globe_plotly.html"):
                 lats_noaa.append(st["latitude"])
                 lons_noaa.append(st["longitude"])
                 texts_noaa.append(
-                    f"<b>NOAA</b><br>ID: {st['id']}<br>Name: {st['name']}<br>"
-                    f"Distance: {st['distance_km']} km<br>"
-                    f"Elevation: {st['elevation']} m<br>"
-                    f"Anemometer: {st['anemometer_height']} m"
+                    f"<b>NOAA</b><br>ID: {st.get('id','N/A')}<br>Name: {st.get('name','N/A')}<br>"
+                    f"Distance: {st.get('distance_km','N/A')} km<br>"
+                    f"Elevation: {st.get('elevation','N/A')} m<br>"
+                    f"Anemometer: {st.get('anemometer_height','N/A')} m"
                 )
+
 
     # === Figure Plotly
     fig = go.Figure()

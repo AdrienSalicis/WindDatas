@@ -2,36 +2,52 @@ import os
 from docx import Document
 from docx.shared import Inches
 import pandas as pd
+from docx2pdf import convert
+from datetime import datetime
 
-def generate_site_report(site_data, output_folder):
+def generate_site_report(site_data, output_folder, template_path='template.docx'):
     """
-    Génère un rapport DOCX pro par site, incluant :
-    - Infos générales
-    - Métadonnées des stations
-    - Graphiques du notebook
-    - Tableaux d'analyses
+    Génère un rapport DOCX et PDF pour un site.
+    Utilise un template Word pour style pro.
     """
 
     site_ref = f"{site_data['reference']}_{site_data['name']}"
-    report_dir = os.path.join(output_folder, site_ref, "report")
-    figures_dir = os.path.join(output_folder, site_ref, "figures")
-    tables_dir = os.path.join(output_folder, site_ref, "tables")
+    base_dir = os.path.join(output_folder, site_ref)
+    report_dir = os.path.join(base_dir, "report")
+    figures_dir = os.path.join(base_dir, "figures")
+    tables_dir = os.path.join(base_dir, "tables")
 
     os.makedirs(report_dir, exist_ok=True)
 
-    doc = Document()
-    doc.add_heading(f"Fiche Technique – {site_data['name']}", 0)
+    # Charger le template
+    doc = Document(template_path)
 
-    # --- 1️⃣ Infos générales
-    doc.add_heading("1️⃣ Informations Générales", level=1)
+    # --- Page de garde
+    doc.add_heading(f"Rapport technique – {site_data['name']}", 0)
+    doc.add_paragraph(f"Pays : {site_data.get('country','N/A')}")
+    doc.add_paragraph(f"Période d'étude : {site_data.get('start','N/A')} - {site_data.get('end','N/A')}")
+    doc.add_paragraph(f"Date de génération : {datetime.now().strftime('%d/%m/%Y')}")
+
+    doc.add_page_break()
+
+    # --- Table des matières
+    doc.add_heading('Table des matières', level=1)
+    doc.add_paragraph('1. Informations générales')
+    doc.add_paragraph('2. Métadonnées des stations')
+    doc.add_paragraph('3. Résultats statistiques')
+    doc.add_paragraph('4. Graphiques générés')
+    doc.add_page_break()
+
+    # --- 1. Informations générales
+    doc.add_heading('1. Informations générales', level=1)
     doc.add_paragraph(f"Nom du site : {site_data['name']}")
-    doc.add_paragraph(f"Pays : {site_data['country']}")
-    doc.add_paragraph(f"Latitude : {site_data['latitude']}")
-    doc.add_paragraph(f"Longitude : {site_data['longitude']}")
-    doc.add_paragraph(f"Période d'étude : {site_data['start']} – {site_data['end']}")
+    doc.add_paragraph(f"Pays : {site_data.get('country','N/A')}")
+    doc.add_paragraph(f"Latitude : {site_data.get('latitude','N/A')}")
+    doc.add_paragraph(f"Longitude : {site_data.get('longitude','N/A')}")
+    doc.add_paragraph(f"Période d'étude : {site_data.get('start','N/A')} - {site_data.get('end','N/A')}")
 
-    # --- 2️⃣ Stations associées
-    doc.add_heading("2️⃣ Métadonnées des stations associées", level=1)
+    # --- 2. Métadonnées des stations
+    doc.add_heading('2. Métadonnées des stations', level=1)
     for key in ["meteostat1", "meteostat2", "noaa1", "noaa2"]:
         station = site_data.get(key)
         if station:
@@ -39,30 +55,48 @@ def generate_site_report(site_data, output_folder):
             for k, v in station.items():
                 doc.add_paragraph(f"{k} : {v}")
 
-    # --- 3️⃣ Graphiques Notebook
-    doc.add_heading("3️⃣ Graphiques générés", level=1)
+    doc.add_page_break()
+
+    # --- 3. Résultats statistiques
+    doc.add_heading('3. Résultats statistiques', level=1)
+    stats_path = os.path.join(tables_dir, f"stats_descriptives_{site_ref}.csv")
+    if os.path.exists(stats_path):
+        df_stats = pd.read_csv(stats_path)
+        doc.add_paragraph('Tableau des statistiques descriptives :')
+        table = doc.add_table(rows=(len(df_stats)+1), cols=len(df_stats.columns))
+        table.style = 'Table Grid'
+        for j, col in enumerate(df_stats.columns):
+            table.cell(0, j).text = col
+        for i, row in df_stats.iterrows():
+            for j, col in enumerate(df_stats.columns):
+                table.cell(i+1, j).text = str(row[col])
+    else:
+        doc.add_paragraph("Aucun fichier de statistiques trouvé.")
+
+    doc.add_page_break()
+
+    # --- 4. Graphiques générés
+    doc.add_heading('4. Graphiques générés', level=1)
     figures_list = sorted([f for f in os.listdir(figures_dir) if f.endswith('.png')])
     for fig in figures_list:
         doc.add_paragraph(fig.replace("_", " ").split(".png")[0])
-        doc.add_picture(os.path.join(figures_dir, fig), width=Inches(5.5))
+        try:
+            doc.add_picture(os.path.join(figures_dir, fig), width=Inches(5.5))
+        except Exception as e:
+            doc.add_paragraph(f"[Erreur lors de l'insertion de l'image : {e}]")
+        doc.add_paragraph("")
 
-    # --- 4️⃣ Tableaux d'analyses
-    doc.add_heading("4️⃣ Tableaux d'analyses", level=1)
-    tables_list = sorted([f for f in os.listdir(tables_dir) if f.endswith('.csv')])
-    for table in tables_list:
-        doc.add_paragraph(table.replace("_", " ").split(".csv")[0])
-        df = pd.read_csv(os.path.join(tables_dir, table))
-        t = doc.add_table(rows=(len(df)+1), cols=len(df.columns))
-        t.style = 'Light Grid Accent 1'
-        for j, col in enumerate(df.columns):
-            t.cell(0, j).text = col
-        for i, row in df.iterrows():
-            for j, col in enumerate(df.columns):
-                t.cell(i+1, j).text = str(row[col])
-
-    # --- Sauvegarde
+    # --- Sauvegarde DOCX
     output_docx = os.path.join(report_dir, f"fiche_{site_ref}.docx")
     doc.save(output_docx)
     print(f"[✅] Rapport DOCX généré : {output_docx}")
+
+    # --- Conversion automatique en PDF
+    try:
+        output_pdf = os.path.join(report_dir, f"fiche_{site_ref}.pdf")
+        convert(output_docx, output_pdf)
+        print(f"[✅] PDF généré automatiquement : {output_pdf}")
+    except Exception as e:
+        print(f"[⚠️] Erreur conversion PDF : {e}")
 
     return output_docx

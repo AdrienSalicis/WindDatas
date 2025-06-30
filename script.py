@@ -105,17 +105,17 @@ def main():
                 except Exception as e:
                     print(f"[⚠️] Erreur NOAA station {i} : {e}")
 
-        meteo_france_data = None
-        if country.upper() in ["FR", "FRANCE"]:
-            try:
-                stations_df = get_mf_stations_list()
-                station_mf = find_closest_mf_station(lat, lon, stations_df)
-                mf_id = station_mf["id"]
-                path_mf = fetch_meteo_france_data(mf_id, start, end, name)
-                df_mf = pd.read_csv(path_mf) if path_mf else None
-                meteo_france_data = df_mf
-            except Exception as e:
-                print(f"[⚠️] Erreur récupération MeteoFrance : {e}")
+        # meteo_france_data = None
+        # if country.upper() in ["FR", "FRANCE"]:
+        #     try:
+        #         stations_df = get_mf_stations_list()
+        #         station_mf = find_closest_mf_station(lat, lon, stations_df)
+        #         mf_id = station_mf["id"]
+        #         path_mf = fetch_meteo_france_data(mf_id, start, end, name)
+        #         df_mf = pd.read_csv(path_mf) if path_mf else None
+        #         meteo_france_data = df_mf
+        #     except Exception as e:
+        #         print(f"[⚠️] Erreur récupération MeteoFrance : {e}")
 
         try:
             observed = fetch_observed_sources(
@@ -133,8 +133,8 @@ def main():
             print(f"[⚠️] Erreur récupération sources observées : {e}")
             observed = {}
 
-        if meteo_france_data is not None:
-            observed["meteofrance"] = {"data": meteo_france_data, "station_id": mf_id}
+        # if meteo_france_data is not None:
+        #     observed["meteofrance"] = {"data": meteo_france_data, "station_id": mf_id}
 
         try:
             model = fetch_model_source(
@@ -167,7 +167,7 @@ def main():
             "data": {
                 "meteostat1": observed.get("meteostat1", {}).get("data"),
                 "meteostat2": observed.get("meteostat2", {}).get("data"),
-                "meteofrance": observed.get("meteofrance", {}).get("data"),
+                # "meteofrance": observed.get("meteofrance", {}).get("data"),
                 "noaa_station1": noaa_data.get("noaa_station1"),
                 "noaa_station2": noaa_data.get("noaa_station2"),
                 "openmeteo": model.get("openmeteo", {}).get("data"),
@@ -177,7 +177,6 @@ def main():
         }
 
         export_site_data(site_data, site_folder)
-        generate_site_report(site_data, output_folder="data")
 
         try:
             print(f"[⚡] Exécution notebook automatique pour {site_ref}")
@@ -190,6 +189,7 @@ def main():
             print(f"[⚠️] Erreur Papermill pour {site_ref} : {e}")
 
         all_sites_data.append(site_data)
+        generate_site_report(site_data, output_folder="data")
 
     create_word_report_by_country(all_sites_data, "data/Rapport_WindDatas.docx")
     visualize_sites_plotly(all_sites_data, "visualisation_plotly.html")

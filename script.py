@@ -24,10 +24,9 @@ from modules.globe_visualizer import visualize_sites_plotly
 from modules.globe_visualizer_pydeck import visualize_sites_pydeck
 
 from modules.report_generator import generate_site_report
+from modules.analysis_generator import generate_analysis_for_site
 
-import papermill as pm
 
-  
 def export_site_data(site_data, site_folder):
     os.makedirs(site_folder, exist_ok=True)
     paths = []
@@ -152,8 +151,8 @@ def main():
                 lon=lon,
                 start_date=start,
                 end_date=end,
-                openmeteo_model=None,               # ➜ paramètre modèle (ECMWF IFS etc.)
-                gust_correction_factor=None         # ➜ paramètre facteur correctif (commenté si inutilisé)
+                openmeteo_model=None,
+                gust_correction_factor=None
             )
         except Exception as e:
             print(f"[⚠️] Erreur récupération source modélisée : {e}")
@@ -174,7 +173,6 @@ def main():
             "data": {
                 "meteostat1": observed.get("meteostat1", {}).get("data"),
                 "meteostat2": observed.get("meteostat2", {}).get("data"),
-                # "meteofrance": observed.get("meteofrance", {}).get("data"),
                 "noaa_station1": noaa_data.get("noaa_station1"),
                 "noaa_station2": noaa_data.get("noaa_station2"),
                 "openmeteo": model.get("openmeteo", {}).get("data"),
@@ -185,15 +183,8 @@ def main():
 
         export_site_data(site_data, site_folder)
 
-        try:
-            print(f"[⚡] Exécution notebook automatique pour {site_ref}")
-            pm.execute_notebook(
-                'notebooks/notebook_auto.ipynb',
-                f'data/{site_ref}/notebook_executed.ipynb',
-                parameters={"site_ref": site_ref}
-            )
-        except Exception as e:
-            print(f"[⚠️] Erreur Papermill pour {site_ref} : {e}")
+        # ✅ Appel au module pour générer automatiquement figures et tables
+        generate_analysis_for_site(site_ref)
 
         all_sites_data.append(site_data)
         generate_site_report(site_data, output_folder="data")

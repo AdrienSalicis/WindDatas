@@ -83,7 +83,4 @@ def fetch_isd_series(usaf, wban, years, output_dir, site_name="site", verbose=Fa
     if verbose:
         print(f"\n✅ NOAA ISD journalier (source={gust_used}) sauvegardé → {final_csv}")
 
-    if return_raw:
-        agg_df._raw = pd.concat(raw_concat, ignore_index=True)
-
     return agg_df

@@ -47,7 +47,13 @@ def export_site_data(site_data, site_folder):
                     print(f"[🧪] CSV brut NOAA ISD sauvegardé : {raw_path}")
         else:
             print(f"[⚠️] Données vides ou absentes pour {key} – fichier non généré.")
+
     site_data["files"] = paths
+
+    if paths:
+        print(f"[📦] Fichiers générés pour {site_data['name']}:")
+        for p in paths:
+            print(f"   • {p}")
 
 def main():
     print("[📁] Répertoire de travail actuel :", os.getcwd())
@@ -88,9 +94,10 @@ def main():
                     filename = f"noaa_station{i}_{name}.csv"
                     filepath = os.path.join(site_folder, filename)
                     if os.path.exists(filepath):
-                        print(f"[⏩] Fichier déjà existant – lecture directe : {filepath}")
+                        print(f"[⏩] Fichier NOAA déjà présent → réutilisation sans téléchargement : {filepath}")
                         df = pd.read_csv(filepath)
                     else:
+                        print(f"[📥] Téléchargement en cours pour NOAA Station {i}...")
                         df = fetch_isd_series(
                             site_name=name,
                             usaf=station["usaf"],

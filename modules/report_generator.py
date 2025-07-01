@@ -23,7 +23,7 @@ def generate_site_report(site_data, output_folder, template_path='template.docx'
     doc = Document(template_path)
 
     # --- Page de garde
-    doc.add_heading(f"Rapport technique – {site_data['name']}", 0)
+    doc.add_heading(f"Rapport technique – {site_data['name']}", level=1)
     doc.add_paragraph(f"Pays : {site_data.get('country','N/A')}")
     doc.add_paragraph(f"Période d'étude : {site_data.get('start','N/A')} - {site_data.get('end','N/A')}")
     doc.add_paragraph(f"Date de génération : {datetime.now().strftime('%d/%m/%Y')}")
